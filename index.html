@@ -840,6 +840,17 @@ function wsSend(obj) {
 function handleWsMessage(msg) {
   const type = msg.msg_type || msg.type;
 
+  // Error responses still carry msg_type — check for error first
+  if (msg.error) {
+    if (type === 'buy') {
+      handleBuyResponse(msg); // let handleBuyResponse deal with it
+    } else {
+      showToast(msg.error.message || 'API error', 'error');
+      console.warn('WS error:', msg.error);
+    }
+    return;
+  }
+
   if (type === 'tick') {
     handleTick(msg.tick || msg);
   } else if (type === 'proposal') {
@@ -854,8 +865,6 @@ function handleWsMessage(msg) {
     handleStatement(msg.statement || msg);
   } else if (type === 'proposal_open_contract') {
     handlePOC(msg.proposal_open_contract || msg);
-  } else if (msg.error) {
-    showToast(msg.error.message || 'API error', 'error');
   }
 }
 
@@ -1052,7 +1061,7 @@ function _doProposal() {
     basis: 'stake',
     contract_type: type,
     currency: 'USD',
-    symbol: state.currentSymbol,
+    underlying_symbol: state.currentSymbol,
     duration: dur,
     duration_unit: 't',
   };
@@ -1098,12 +1107,11 @@ function placeTrade(action) {
   buyBtn.innerHTML = '<span class="spinner"></span>';
   buyBtn.disabled = true;
 
-  // Deriv WS buy requires the proposal ID and the ask_price from the proposal
-  // Using the stake input value instead of ask_price causes a Bad Request error
+  // buy must be a string per the API schema; price must be the ask_price from the proposal
   const askPrice = parseFloat(state.proposal.ask_price || state.proposal.display_value || document.getElementById('stake-input').value) || 0.35;
 
   wsSend({
-    buy: state.proposalId,
+    buy: String(state.proposalId),
     price: askPrice,
   });
 }
@@ -1128,6 +1136,9 @@ function handleBuyResponse(buy) {
 
   showToast(`✅ Contract #${buy.contract_id || buy.id} purchased!`, 'success');
 
+  // Capture payout before clearing stale proposal
+  const positionPayout = state.proposal?.payout || 0;
+
   // Clear stale proposal — it was consumed by the buy
   state.proposal = null;
   state.proposalId = null;
@@ -1143,7 +1154,7 @@ function handleBuyResponse(buy) {
     duration: state.selectedDuration,
     status: 'open',
     time: new Date().toLocaleTimeString(),
-    payout: state.proposal?.payout || 0,
+    payout: positionPayout,
   };
   state.positions.unshift(pos);
   renderPortfolio();
