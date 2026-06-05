@@ -1,1743 +1,1363 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>DigitPad Pro — Over/Under Streak</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css">
-    <style>
-/* ── TOKENS ── */
-:root {
-    --bg:        #080d18;
-    --surface:   #0e1623;
-    --surface2:  #111d2e;
-    --border:    #1c2d44;
-    --border2:   #243550;
-    --primary:   #3b82f6;
-    --success:   #10b981;
-    --danger:    #ef4444;
-    --warning:   #f59e0b;
-    --over:      #10b981;
-    --under:     #f97316;
-    --txt:       #e2e8f0;
-    --txt2:      #64748b;
-    --txt3:      #94a3b8;
-    --hot-ov-bg: rgba(16,185,129,0.15);
-    --hot-un-bg: rgba(249,115,22,0.15);
-    --radius:    7px;
-    --font:      'Courier New', 'JetBrains Mono', monospace;
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deriv Digits Trader | skimotho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg:        #0d0f14;
+    --bg2:       #13161e;
+    --bg3:       #1a1e29;
+    --border:    #252a38;
+    --accent:    #ff444f;
+    --accent2:   #ff7c45;
+    --green:     #2ecc71;
+    --red:       #e74c3c;
+    --text:      #e8eaf0;
+    --muted:     #6b7280;
+    --card-r:    10px;
+    --glow:      0 0 30px rgba(255,68,79,0.15);
+    --tr:        0.18s ease;
+  }
+  body.light {
+    --bg:        #f0f2f7;
+    --bg2:       #ffffff;
+    --bg3:       #e6e9f0;
+    --border:    #d1d5e0;
+    --text:      #1a1e29;
+    --muted:     #8892a4;
+    --glow:      0 0 30px rgba(255,68,79,0.08);
+  }
 
-*{box-sizing:border-box;margin:0;padding:0;}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--tr), color var(--tr);
+    overflow-x: hidden;
+  }
 
-body{
-    background:var(--bg);
-    color:var(--txt);
-    font-family:var(--font);
-    font-size:13px;
-    line-height:1.45;
-    padding:8px;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    overflow-x:hidden;
-}
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 999; opacity: 0.4;
+  }
 
-/* ══ LOGIN OVERLAY ══ */
-#loginOverlay{
-    position:fixed;inset:0;
-    background:rgba(8,13,24,0.97);
-    display:flex;align-items:center;justify-content:center;
-    z-index:9999;
-    flex-direction:column;
-    gap:20px;
-}
-.login-card{
-    background:var(--surface);
-    border:1px solid var(--border2);
-    border-radius:12px;
-    padding:32px 36px;
-    max-width:420px;
-    width:90%;
-    text-align:center;
-    display:flex;flex-direction:column;gap:18px;
-}
-.login-card h2{
-    color:var(--primary);font-size:1.1rem;font-weight:800;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.login-card p{ color:var(--txt3);font-size:0.72rem;line-height:1.6; }
-.btn-oauth{
-    background:linear-gradient(135deg,#e8003d,#b8002e);
-    color:#fff;border:none;border-radius:7px;
-    padding:12px 24px;font-family:var(--font);
-    font-size:0.82rem;font-weight:800;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    letter-spacing:0.04em;transition:filter .15s;
-}
-.btn-oauth:hover{filter:brightness(1.2);}
-.btn-oauth-signup{
-    background:var(--surface2);
-    color:var(--txt3);border:1px solid var(--border2);
-    border-radius:7px;padding:10px 24px;font-family:var(--font);
-    font-size:0.75rem;font-weight:700;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    letter-spacing:0.04em;transition:filter .15s;
-}
-.btn-oauth-signup:hover{filter:brightness(1.15);}
-.login-status{
-    font-size:0.65rem;color:var(--txt2);
-    display:flex;align-items:center;gap:6px;justify-content:center;
-}
-#loginError{
-    color:var(--danger);font-size:0.68rem;display:none;
-    background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
-    border-radius:5px;padding:8px 12px;
-}
-/* Account selector */
-#accountSelector{display:none;flex-direction:column;gap:10px;}
-#accountSelector h3{color:var(--txt);font-size:0.82rem;font-weight:700;}
-.acct-list{display:flex;flex-direction:column;gap:6px;}
-.acct-btn{
-    background:var(--surface2);border:1px solid var(--border2);
-    border-radius:6px;padding:10px 14px;cursor:pointer;
-    display:flex;align-items:center;justify-content:space-between;
-    transition:border-color .15s,background .15s;
-}
-.acct-btn:hover{border-color:var(--primary);background:rgba(59,130,246,0.08);}
-.acct-btn.demo-acct{border-left:3px solid var(--warning);}
-.acct-btn.real-acct{border-left:3px solid var(--success);}
-.acct-name{color:var(--txt);font-size:0.75rem;font-weight:700;}
-.acct-type{color:var(--txt3);font-size:0.6rem;}
-.acct-cur {color:var(--txt2);font-size:0.65rem;}
+  /* ── TOPBAR ── */
+  #topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 62px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .logo { font-family: 'Space Mono', monospace; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
 
-/* ══ UPPER AREA ══ */
-.upper-area{
-    display:grid;
-    grid-template-columns:320px 1fr;
-    gap:6px;
-    flex-shrink:0;
-}
-.left-col{ display:flex;flex-direction:column;gap:6px;min-width:0; }
-.right-col{
-    display:grid;grid-template-columns:1fr 1fr;
-    gap:6px;min-width:0;height:380px;
-}
+  /* pill badge */
+  .badge {
+    font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+    background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
+    font-family: 'Space Mono', monospace; letter-spacing: 0.3px;
+  }
+  .badge.live { color: var(--green); border-color: rgba(46,204,113,0.3); background: rgba(46,204,113,0.07); }
+  .badge.demo { color: var(--accent2); border-color: rgba(255,124,69,0.3); background: rgba(255,124,69,0.07); }
 
-/* ══ HEADER ══ */
-.hdr{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);padding:6px 12px;
-    display:flex;align-items:center;gap:10px;flex-wrap:nowrap;flex-shrink:0;
-}
-.brand{
-    font-size:0.82rem;font-weight:800;color:var(--primary);
-    white-space:nowrap;display:flex;align-items:center;gap:6px;letter-spacing:0.04em;
-}
-.brand small{color:var(--txt2);font-weight:400;font-size:0.62rem;}
-.stat-bar{display:flex;gap:6px;flex:1;justify-content:flex-end;flex-wrap:nowrap;}
-.stat{
-    display:flex;flex-direction:column;align-items:center;
-    padding:3px 9px;background:rgba(255,255,255,0.025);
-    border:1px solid var(--border);border-radius:5px;min-width:82px;
-}
-.stat-lbl{font-size:0.52rem;color:var(--txt2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1px;}
-.stat-val{font-size:0.82rem;font-weight:700;}
-.user-badge{
-    display:flex;align-items:center;gap:5px;
-    background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);
-    border-radius:5px;padding:3px 8px;font-size:0.62rem;color:#34d399;
-    cursor:pointer;white-space:nowrap;
-}
-.user-badge:hover{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--danger);}
-.user-badge i{font-size:0.6rem;}
+  /* icon buttons */
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    transition: border-color var(--tr), background var(--tr);
+  }
+  .icon-btn:hover { border-color: var(--accent); background: rgba(255,68,79,0.1); }
 
-/* ══ CONTROLS STRIP ══ */
-.ctrl-strip{
-    display:grid;grid-template-columns:1fr 1fr;
-    gap:5px 8px;align-items:start;padding:7px 10px 6px;
-    overflow:visible;background:#020610;
-}
-.ctrl-btn-row{
-    display:flex;gap:5px;align-items:center;flex-wrap:nowrap;
-    grid-column:1 / -1;padding-top:4px;
-    border-top:1px solid var(--border);margin-top:1px;
-}
-.ctrl-full{grid-column:1 / -1;}
-.ctrl-group{display:flex;flex-direction:column;gap:3px;min-width:0;}
-.ctrl-group label{
-    font-size:0.52rem;color:var(--txt2);
-    text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;
-}
-.ctrl-group input[type="number"],
-.ctrl-group select{
-    background:var(--bg);border:1px solid var(--border2);
-    border-radius:4px;color:var(--txt);font-family:var(--font);
-    font-size:0.72rem;padding:3px 6px;width:100%;min-width:0;
-}
-.ctrl-group input[type="number"]:focus,
-.ctrl-group select:focus{outline:none;border-color:var(--primary);}
+  /* ── LAYOUT ── */
+  #app { display: none; }
+  #login-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: calc(100vh - 62px); padding: 40px 20px; text-align: center;
+  }
 
-/* ── buttons ── */
-.btn{
-    display:inline-flex;align-items:center;justify-content:center;
-    gap:4px;padding:5px 11px;border:none;border-radius:5px;
-    font-family:var(--font);font-size:0.68rem;font-weight:700;
-    cursor:pointer;white-space:nowrap;letter-spacing:0.03em;
-    transition:filter .15s,transform .08s;
-}
-.btn:active{transform:scale(0.97);}
-.btn:hover{filter:brightness(1.15);}
-.btn-connect {background:#1e3a5f;color:#60a5fa;border:1px solid #2a4a70;}
-.btn-start   {background:var(--primary);color:#fff;}
-.btn-pause   {background:var(--warning);color:#000;}
-.btn-stop    {background:var(--danger);color:#fff;}
-.btn-ghost   {background:#1a2a3e;color:var(--txt3);border:1px solid var(--border2);font-weight:400;}
-.btn-ghost:hover{color:var(--txt);}
-.btn-sim-off{background:#1a2a3e;color:#94a3b8;border:1px solid var(--border2);}
-.btn-sim-on {background:#78350f;color:#fcd34d;border:1px solid #92400e;box-shadow:0 0 6px rgba(245,158,11,0.3);}
+  /* ── AUTH CARD ── */
+  .auth-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 52px 48px; max-width: 440px; width: 100%;
+    box-shadow: var(--glow);
+    animation: fadeUp 0.6s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .auth-card h1 { font-family:'Space Mono',monospace; font-size:1.6rem; margin-bottom:8px; }
+  .auth-card p { color: var(--muted); font-size:0.9rem; line-height:1.6; margin-bottom:36px; }
 
-.divider{width:1px;height:34px;background:var(--border);flex-shrink:0;align-self:center;}
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 28px; border-radius: 10px; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; border: none; transition: all var(--tr); width: 100%;
+    font-family: 'DM Sans', sans-serif; letter-spacing: 0.2px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; box-shadow: 0 4px 20px rgba(255,68,79,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,68,79,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-sm { padding: 8px 18px; font-size: 0.82rem; width: auto; border-radius: 8px; }
 
-/* ══ PANELS ══ */
-.panel{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;
-}
-.panel-hdr{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:4px 9px;background:rgba(0,0,0,0.25);
-    border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.panel-title{
-    font-size:0.6rem;font-weight:700;color:var(--txt2);
-    text-transform:uppercase;letter-spacing:0.07em;
-    display:flex;align-items:center;gap:5px;
-}
-.panel-title i{font-size:0.65rem;}
-.panel-actions{display:flex;gap:4px;}
+  .btn-green { background: linear-gradient(135deg, #27ae60, #2ecc71); color:#fff; box-shadow:0 4px 20px rgba(46,204,113,0.25); }
+  .btn-green:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(46,204,113,0.4); }
+  .btn-red   { background: linear-gradient(135deg, #c0392b, #e74c3c); color:#fff; box-shadow:0 4px 20px rgba(231,76,60,0.25); }
+  .btn-red:hover   { transform:translateY(-1px); box-shadow:0 6px 28px rgba(231,76,60,0.4); }
 
-/* Activity log */
-#log{flex:1;overflow-y:auto;padding:5px 8px;font-size:0.59rem;background:#020610;}
-#log::-webkit-scrollbar{width:4px;}
-#log::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:4px;}
-.log-entry{padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);line-height:1.35;}
-.log-ts{color:#334155;margin-right:4px;}
+  .divider { display:flex; align-items:center; gap:12px; margin:24px 0; color:var(--muted); font-size:0.8rem; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-/* History table */
-#historyPanel{flex:1;overflow-y:auto;background:#020610;}
-#historyPanel::-webkit-scrollbar{width:4px;}
-#historyPanel::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:4px;}
-#historyTable{width:100%;border-collapse:collapse;font-size:0.55rem;}
-#historyTable thead th{
-    position:sticky;top:0;background:#08101e;color:var(--txt2);
-    text-transform:uppercase;letter-spacing:0.04em;
-    padding:4px 3px;text-align:center;
-    border-bottom:1px solid var(--border);font-size:0.5rem;z-index:2;
-}
-#historyTable tbody tr{border-bottom:1px solid rgba(255,255,255,0.025);}
-#historyTable tbody tr:hover{background:rgba(255,255,255,0.02);}
-#historyTable td{padding:3px;text-align:center;color:var(--txt2);white-space:nowrap;}
-#historyTable td.ht-sym {color:#e2e8f0;font-weight:700;text-align:left;padding-left:5px;}
-#historyTable td.ht-win {color:var(--success);font-weight:700;}
-#historyTable td.ht-loss{color:var(--danger);font-weight:700;}
-#historyTable td.ht-pos {color:var(--success);}
-#historyTable td.ht-neg {color:var(--danger);}
-#historyTable tr.sim-row{border-left:2px solid var(--warning);background:rgba(245,158,11,0.04);}
-#historyTable td.ht-sim {color:var(--warning);font-size:0.48rem;font-weight:700;letter-spacing:0.04em;}
+  /* ── MAIN GRID ── */
+  #app {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    min-height: calc(100vh - 62px);
+  }
 
-/* ══ GRID PANEL ══ */
-.grid-wrap{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);flex:1;min-height:0;
-    display:flex;flex-direction:column;overflow:hidden;
-}
-.grid-legend{
-    display:flex;align-items:center;gap:8px;
-    padding:5px 10px;background:rgba(0,0,0,0.2);
-    border-bottom:1px solid var(--border);flex-shrink:0;
-    flex-wrap:wrap;font-size:0.58rem;color:var(--txt2);
-}
-.badge{
-    background:linear-gradient(135deg,#1d4ed8,#7c3aed);
-    padding:2px 9px;border-radius:40px;font-weight:700;
-    font-size:0.58rem;color:#fff;white-space:nowrap;
-}
-.grid-scroll{flex:1;overflow-x:auto;overflow-y:auto;}
-.grid-scroll::-webkit-scrollbar{height:5px;width:5px;}
-.grid-scroll::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:4px;}
-.market-grid{
-    width:100%;border-collapse:separate;border-spacing:2px;
-    table-layout:fixed;min-width:1800px;
-}
-.market-grid th{
-    padding:4px 2px;text-align:center;color:var(--txt2);
-    font-size:0.54rem;font-weight:700;
-    background:rgba(0,0,0,0.3);border-radius:5px;white-space:nowrap;
-}
-.market-grid td{text-align:center;vertical-align:middle;padding:1px;}
-.col-market{width:82px;}
-.col-tick  {width:95px;}
-.col-last4 {width:100px;}
-.col-pattern{width:72px;}
-.symbol-label{
-    text-align:left !important;color:var(--txt) !important;
-    font-weight:700 !important;font-size:0.66rem;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:3px !important;
-}
-.last-tick-cell{
-    background:var(--bg);border-radius:5px;padding:4px 2px;
-    font-weight:800;font-size:0.7rem;text-align:center;
-    border:1px solid var(--border);color:var(--txt);
-    display:block;width:100%;overflow:hidden;white-space:nowrap;
-}
-.last-digit-big{font-size:0.88rem;font-weight:900;color:var(--primary);}
-.last4-cell{
-    background:var(--bg);border-radius:5px;padding:4px 3px;
-    font-size:0.78rem;text-align:center;border:1px solid var(--border);
-    letter-spacing:0.08em;display:block;width:100%;white-space:nowrap;
-}
-.pattern-cell{
-    border-radius:5px;padding:4px 2px;font-weight:700;font-size:0.7rem;
-    text-align:center;border:1px solid var(--border);color:var(--txt2);
-    display:block;width:100%;white-space:nowrap;
-}
+  /* ── SIDEBAR ── */
+  #sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    grid-row: 1 / 3;
+  }
+  .section-label {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); padding: 6px 8px 8px; font-family: 'Space Mono', monospace;
+  }
 
-/* ══ MODAL ══ */
-.modal{
-    display:none;background:var(--surface);
-    border:1px solid var(--border2);border-radius:9px;
-    padding:20px 22px;min-width:280px;max-width:340px;
-}
-.modal h3{color:var(--txt);font-size:0.82rem;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
-.modal-input{
-    width:100%;padding:5px 8px;background:var(--bg);
-    border:1px solid var(--border2);border-radius:5px;
-    color:var(--txt);font-family:var(--font);font-size:0.75rem;
-}
-.modal-row{display:flex;gap:8px;margin-top:12px;}
+  /* account card */
+  .account-card {
+    border: 1px solid var(--border); border-radius: var(--card-r);
+    padding: 14px; margin-bottom: 8px; cursor: pointer;
+    transition: all var(--tr); background: var(--bg3);
+  }
+  .account-card:hover { border-color: var(--accent); }
+  .account-card.active { border-color: var(--accent); background: rgba(255,68,79,0.06); }
+  .account-card .ac-id { font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--muted); }
+  .account-card .ac-bal { font-size:1.1rem; font-weight:600; font-family:'Space Mono',monospace; margin-top:4px; }
+  .account-card .ac-type { font-size:0.72rem; margin-top:4px; }
 
-/* ══ PATTERN CONFIGURATOR ══ */
-.pat-panel{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);display:flex;flex-direction:column;
-    overflow:hidden;flex-shrink:0;
-}
-.pat-panel-body{
-    padding:8px 10px 10px;background:#020610;
-    display:flex;flex-direction:column;gap:7px;
-}
-.pat-cfg-wrap{
-    grid-column:1 / -1;display:flex;flex-direction:column;gap:4px;
-    padding-top:5px;border-top:1px solid var(--border);margin-top:2px;
-}
-.pat-cfg-title{
-    font-size:0.52rem;color:var(--txt2);text-transform:uppercase;
-    letter-spacing:0.05em;display:flex;align-items:center;gap:6px;
-}
-.pat-status{font-size:0.5rem;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:0.04em;}
-.pat-status-on  { background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); }
-.pat-status-off { background:rgba(100,116,139,0.15); color:#64748b; border:1px solid rgba(100,116,139,0.25); }
-.pat-row{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;}
-.pat-row-label{display:none;}
-.pat-slot{
-    width:26px;height:24px;border-radius:4px;border:1px solid var(--border2);
-    background:var(--bg);color:var(--txt);font-family:var(--font);
-    font-size:0.62rem;font-weight:700;text-align:center;cursor:pointer;
-    transition:background .12s,border-color .12s,color .12s;
-    appearance:none;-webkit-appearance:none;padding:0;
-}
-.pat-slot:focus{outline:none;border-color:var(--primary);}
-.pat-slot[data-val="E"]{background:rgba(16,185,129,0.18);border-color:#10b981;color:#34d399;}
-.pat-slot[data-val="O"]{background:rgba(249,115,22,0.18);border-color:#f97316;color:#fb923c;}
-.pat-slot[data-val="*"]{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--txt2);}
-.pat-slot-idx{font-size:0.42rem;color:var(--txt2);text-align:center;width:26px;line-height:1;}
+  /* symbol list */
+  .symbol-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 10px; border-radius: 8px; cursor:pointer;
+    transition: background var(--tr); margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .symbol-item:hover { background: var(--bg3); }
+  .symbol-item.active { background: var(--bg3); border-color: var(--accent); }
+  .symbol-item .sym-name { font-size:0.85rem; font-weight:500; }
+  .symbol-item .sym-tick { font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--accent); }
+  .sym-up   { color: var(--green) !important; }
+  .sym-down { color: var(--red) !important; }
 
-/* stake badge */
-.stake-badge{
-    display:inline-flex;align-items:center;gap:5px;
-    background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);
-    border-radius:4px;padding:3px 8px;font-size:0.7rem;color:#93c5fd;
-}
-/* status dot */
-.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;}
-.dot-live   {background:var(--success);box-shadow:0 0 5px var(--success);}
-.dot-running{background:var(--warning);box-shadow:0 0 5px var(--warning);animation:pulse 1s infinite;}
-.dot-paused {background:var(--warning);}
-.dot-stopped{background:var(--danger);}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+  /* ── MAIN CONTENT ── */
+  #main { padding: 24px; overflow-y: auto; }
 
-/* WS status mini-bar */
-#wsStatusBar{
-    font-size:0.58rem;color:var(--txt2);
-    display:flex;align-items:center;gap:6px;padding:3px 8px;
-    background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);
-    flex-shrink:0;
-}
-#wsStatusDot{width:6px;height:6px;border-radius:50%;background:var(--danger);flex-shrink:0;}
-#wsStatusDot.ok{background:var(--success);box-shadow:0 0 4px var(--success);}
-#wsStatusDot.connecting{background:var(--warning);animation:pulse 1s infinite;}
-    </style>
+  .tab-bar { display:flex; gap:6px; margin-bottom:24px; }
+  .tab {
+    padding: 8px 20px; border-radius: 8px; font-size:0.85rem; font-weight:500;
+    cursor:pointer; border: 1px solid var(--border); background: var(--bg2); color:var(--muted);
+    transition: all var(--tr);
+  }
+  .tab.active { background: var(--accent); color:#fff; border-color: var(--accent); }
+  .tab:hover:not(.active) { border-color: var(--accent); color:var(--text); }
+
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* ── TICK DISPLAY ── */
+  .tick-display {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--card-r); padding: 24px; margin-bottom: 20px;
+  }
+  .tick-header { display:flex; align-items:baseline; gap:16px; margin-bottom:16px; }
+  .tick-symbol { font-family:'Space Mono',monospace; font-size:0.9rem; color:var(--muted); }
+  .tick-price {
+    font-family:'Space Mono',monospace; font-size:2.8rem; font-weight:700;
+    transition: color 0.3s ease;
+  }
+  .tick-price.up   { color: var(--green); }
+  .tick-price.down { color: var(--red); }
+  .tick-price.flat { color: var(--text); }
+  .tick-change { font-size:0.8rem; padding:3px 10px; border-radius:20px; font-family:'Space Mono',monospace; }
+  .tick-change.up   { background:rgba(46,204,113,0.1); color:var(--green); }
+  .tick-change.down { background:rgba(231,76,60,0.1);  color:var(--red); }
+
+  /* mini tick tape */
+  .tick-tape {
+    display:flex; gap:6px; overflow:hidden; height:36px; align-items:center;
+  }
+  .tick-dot {
+    width:28px; height:28px; border-radius:6px; display:flex; align-items:center;
+    justify-content:center; font-family:'Space Mono',monospace; font-size:0.72rem;
+    font-weight:700; flex-shrink:0; transition:all 0.3s ease;
+  }
+  .tick-dot.even { background:rgba(46,204,113,0.15); color:var(--green); border:1px solid rgba(46,204,113,0.2); }
+  .tick-dot.odd  { background:rgba(231,76,60,0.15);  color:var(--red);   border:1px solid rgba(231,76,60,0.2); }
+
+  /* ── TRADE PANEL (right) ── */
+  #right-panel {
+    background: var(--bg2); border-left: 1px solid var(--border);
+    padding: 20px; overflow-y: auto; grid-row: 1 / 3;
+  }
+
+  .panel-title { font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; }
+
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:0.78rem; color:var(--muted); margin-bottom:6px; display:block; font-weight:500; }
+  .form-select, .form-input {
+    width:100%; padding:10px 12px; border-radius:8px;
+    border:1px solid var(--border); background:var(--bg3); color:var(--text);
+    font-size:0.88rem; font-family:'DM Sans',sans-serif;
+    transition: border-color var(--tr);
+    appearance: none;
+  }
+  .form-select:focus, .form-input:focus {
+    outline:none; border-color:var(--accent);
+  }
+
+  /* digit selector */
+  .digit-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .digit-btn {
+    padding:8px 4px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg3); color:var(--text); font-family:'Space Mono',monospace;
+    font-size:0.9rem; cursor:pointer; text-align:center;
+    transition: all var(--tr);
+  }
+  .digit-btn:hover { border-color:var(--accent); }
+  .digit-btn.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  /* duration */
+  .duration-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .dur-btn {
+    padding:7px 4px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg3); color:var(--text); font-size:0.78rem; cursor:pointer;
+    text-align:center; transition:all var(--tr); font-family:'Space Mono',monospace;
+  }
+  .dur-btn:hover { border-color:var(--accent); }
+  .dur-btn.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  /* proposal box */
+  .proposal-box {
+    background:var(--bg3); border:1px solid var(--border); border-radius:var(--card-r);
+    padding:14px; margin-bottom:16px; font-size:0.83rem;
+  }
+  .proposal-row { display:flex; justify-content:space-between; padding:4px 0; }
+  .proposal-row .val { font-family:'Space Mono',monospace; font-weight:600; }
+  .proposal-row .val.profit { color:var(--green); }
+  .proposal-row .val.loading { color:var(--muted); font-style:italic; }
+
+  /* trade buttons */
+  .trade-buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
+  .trade-btn-wrap { display:flex; flex-direction:column; gap:4px; }
+
+  /* ── OPEN POSITIONS ── */
+  .position-card {
+    background:var(--bg2); border:1px solid var(--border); border-radius:var(--card-r);
+    padding:16px; margin-bottom:12px; transition:border-color var(--tr);
+    animation: fadeUp 0.3s ease both;
+  }
+  .position-card:hover { border-color:var(--accent); }
+  .pos-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .pos-id { font-family:'Space Mono',monospace; font-size:0.72rem; color:var(--muted); }
+  .pos-status { font-size:0.72rem; padding:2px 8px; border-radius:20px; }
+  .pos-status.open { background:rgba(46,204,113,0.1); color:var(--green); }
+  .pos-status.won  { background:rgba(46,204,113,0.2); color:var(--green); }
+  .pos-status.lost { background:rgba(231,76,60,0.1);  color:var(--red); }
+  .pos-details { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .pos-detail .label { font-size:0.72rem; color:var(--muted); }
+  .pos-detail .value { font-family:'Space Mono',monospace; font-size:0.85rem; margin-top:2px; }
+
+  /* ── STATEMENT TABLE ── */
+  .statement-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+  .statement-table th {
+    text-align:left; padding:10px 12px; border-bottom:1px solid var(--border);
+    color:var(--muted); font-weight:500; font-size:0.72rem; letter-spacing:0.5px;
+    text-transform:uppercase; font-family:'Space Mono',monospace;
+  }
+  .statement-table td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .statement-table tr:hover td { background:var(--bg3); }
+  .profit-cell { color:var(--green); font-family:'Space Mono',monospace; }
+  .loss-cell   { color:var(--red);   font-family:'Space Mono',monospace; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+  .stat-card {
+    background:var(--bg2); border:1px solid var(--border); border-radius:var(--card-r);
+    padding:16px; transition:border-color var(--tr);
+  }
+  .stat-card:hover { border-color:var(--accent); }
+  .stat-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; font-family:'Space Mono',monospace; }
+  .stat-value { font-family:'Space Mono',monospace; font-size:1.3rem; font-weight:700; margin-top:6px; }
+  .stat-value.green { color:var(--green); }
+  .stat-value.red   { color:var(--red); }
+
+  /* ── STATUS TOAST ── */
+  #toast {
+    position:fixed; bottom:24px; right:24px; z-index:1000;
+    background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 20px; font-size:0.85rem; box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    transform:translateY(80px); opacity:0; transition:all 0.3s ease;
+    max-width:320px;
+  }
+  #toast.show { transform:translateY(0); opacity:1; }
+  #toast.success { border-color:var(--green); }
+  #toast.error   { border-color:var(--red); }
+  #toast.info    { border-color:var(--accent); }
+
+  /* ── WS STATUS ── */
+  .ws-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .ws-dot.connected    { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .ws-dot.disconnected { background:var(--red); }
+  .ws-dot.connecting   { background:var(--accent2); animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* spinner */
+  .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  /* empty state */
+  .empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:0.9rem; }
+  .empty-icon { font-size:2.5rem; margin-bottom:12px; }
+
+  /* responsive */
+  @media(max-width:1100px) {
+    #app { grid-template-columns: 240px 1fr; }
+    #right-panel { display:none; }
+  }
+  @media(max-width:768px) {
+    #app { grid-template-columns: 1fr; }
+    #sidebar { display:none; }
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+  }
+
+  /* ── NOTICE BOX ── */
+  .notice {
+    background: rgba(255,124,69,0.08); border:1px solid rgba(255,124,69,0.25);
+    border-radius: var(--card-r); padding:14px 16px; font-size:0.82rem; color:var(--accent2);
+    line-height:1.6; margin-bottom:20px;
+  }
+  .notice strong { color:var(--accent2); }
+
+  .scroll-area { overflow-y:auto; max-height:calc(100vh - 200px); }
+  
+  /* ── PORTFOLIO ── */
+  #portfolio-content .position-card { margin-bottom:10px; }
+</style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     LOGIN OVERLAY
-══════════════════════════════════════════════════════════ -->
-<div id="loginOverlay">
-    <div class="login-card">
-        <h2><i class="fa-solid fa-chart-bar"></i> DigitPad Pro</h2>
-        <p>Sign in with your Deriv account to start trading.<br>
-           No passwords shared — secure OAuth 2.0 login.</p>
-        <div id="loginError"></div>
-
-        <!-- Step 1: Login / Signup buttons -->
-        <div id="loginButtons" style="display:flex;flex-direction:column;gap:10px;">
-            <button class="btn-oauth" onclick="startOAuthLogin()">
-                <i class="fa-solid fa-right-to-bracket"></i> Log In with Deriv
-            </button>
-            <button class="btn-oauth-signup" onclick="startOAuthSignup()">
-                <i class="fa-solid fa-user-plus"></i> Create Deriv Account
-            </button>
-        </div>
-
-        <!-- Step 2: Account selector (shown after OAuth callback) -->
-        <div id="accountSelector">
-            <h3><i class="fa-solid fa-wallet"></i> Select Account</h3>
-            <div class="acct-list" id="acctList"></div>
-        </div>
-
-        <div class="login-status" id="loginStatus">
-            <span id="wsStatusDot"></span>
-            <span id="loginStatusText">Not connected</span>
-        </div>
-    </div>
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">DERIV<span>.</span>DIGITS</div>
+  <div class="topbar-right" id="topbar-right">
+    <span id="theme-toggle" class="icon-btn" title="Toggle theme" onclick="toggleTheme()">☀️</span>
+  </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     HEADER
-══════════════════════════════════════════════════════════ -->
-<header class="hdr">
-    <div class="brand">
-        <i class="fa-solid fa-chart-bar"></i>
-        DigitPad&nbsp;<small>OVER/UNDER STREAK</small>
-    </div>
-    <div class="stat-bar">
-        <div class="stat">
-            <span class="stat-lbl">Balance</span>
-            <span class="stat-val" id="lblBalance">$ —</span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">P / L</span>
-            <span class="stat-val" id="lblProfit" style="color:var(--success);">$ 0.00</span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">Losses Total</span>
-            <span class="stat-val" id="lblDrawdownVal" style="color:var(--warning);">$ 0.00</span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">Max Drawdown</span>
-            <span class="stat-val" id="lblMaxDrawdown">$ 0.00</span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">W / L</span>
-            <span class="stat-val">
-                <span id="lblWins" style="color:var(--success);">0</span>
-                <span style="color:var(--txt2);">/</span>
-                <span id="lblLosses" style="color:var(--danger);">0</span>
-            </span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">Stake</span>
-            <span class="stat-val stake-badge"><i class="fa-solid fa-dollar-sign" style="font-size:0.55rem;"></i><span id="lblStake">1.00</span></span>
-        </div>
-        <div class="stat">
-            <span class="stat-lbl">Status</span>
-            <span class="stat-val" id="lblStatus"><span class="status-dot dot-live"></span>Live</span>
-        </div>
-        <!-- Logged-in user info + logout -->
-        <div class="user-badge" id="userBadge" style="display:none;" onclick="logout()" title="Click to log out">
-            <i class="fa-solid fa-circle-user"></i>
-            <span id="userBadgeText">Account</span>
-            <i class="fa-solid fa-right-from-bracket" style="font-size:0.5rem;opacity:0.6;"></i>
-        </div>
-    </div>
-</header>
-
-<!-- WS status bar -->
-<div id="wsStatusBar">
-    <span id="wsStatusDot2" class="status-dot dot-stopped" style="width:6px;height:6px;"></span>
-    <span id="wsStatusText">WebSocket: disconnected</span>
-    <span style="color:var(--border2);">|</span>
-    <span id="wsAccountLabel" style="color:var(--txt3);">No account</span>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     UPPER AREA
-══════════════════════════════════════════════════════════ -->
-<div class="upper-area">
-  <div class="left-col">
-
-    <!-- Bot Controls Panel -->
-    <div class="panel">
-        <div class="panel-hdr">
-            <div class="panel-title"><i class="fa-solid fa-sliders"></i> Bot Controls</div>
-        </div>
-        <div class="ctrl-strip">
-            <div class="ctrl-group">
-                <label>Martingale ×</label>
-                <input type="number" id="txtMartingaleFactorUI" value="1.2" step="0.01" min="0.01">
-            </div>
-            <div class="ctrl-group">
-                <label title="Stake below this → Sim mode.">Sim↔Live ($)</label>
-                <input type="number" id="txtSimThreshold" value="0.35" step="0.01" min="0">
-            </div>
-            <div class="ctrl-group">
-                <label>Sample Ticks</label>
-                <input type="number" id="txtSample" value="1000" step="100" min="50">
-            </div>
-            <div class="ctrl-group">
-                <label>Duration</label>
-                <select id="selDur">
-                    <option value="1" selected>1 Tick</option>
-                    <option value="2">2 Ticks</option>
-                    <option value="3">3 Ticks</option>
-                    <option value="5">5 Ticks</option>
-                </select>
-            </div>
-            <div class="ctrl-btn-row">
-                <button class="btn btn-connect" onclick="reconnectWS()"><i class="fa-solid fa-rotate"></i> Reconnect</button>
-                <button class="btn btn-sim-off" id="btnSimToggle" style="cursor:default;"><i class="fa-solid fa-flask"></i> Live</button>
-                <button class="btn btn-start" id="btnAutoTrade" onclick="StartAutoTrade()"><i class="fa-solid fa-play"></i> Start</button>
-                <button class="btn btn-stop" onclick="ezStopBot()"><i class="fa-solid fa-stop"></i> Stop</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pattern Configurator Panel -->
-    <div class="pat-panel">
-        <div class="panel-hdr">
-            <div class="panel-title"><i class="fa-solid fa-table-cells"></i> Pattern Configurator
-                <span style="font-size:0.46rem;color:var(--txt2);font-weight:400;margin-left:4px;">· = any &nbsp; E = even &nbsp; O = odd</span>
-            </div>
-        </div>
-        <div class="pat-panel-body">
-            <div class="pat-cfg-wrap" style="border-top:none;padding-top:0;margin-top:0;">
-                <div class="pat-cfg-title">
-                    <i class="fa-solid fa-circle-dot" style="font-size:0.55rem;color:#fb923c;"></i>
-                    DIGITODD pattern &nbsp;<span style="color:var(--txt2);font-weight:400;font-size:0.48rem;">(slot 1=oldest · slot 10=newest)</span>
-                    <span class="pat-status pat-status-off" id="patStatusOdd">DISABLED</span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:2px;">
-                    <div class="pat-row" id="patRowOdd"></div>
-                    <div class="pat-row" id="patIdxOdd" style="gap:3px;"></div>
-                </div>
-            </div>
-            <div class="pat-cfg-wrap" style="border-top:1px solid var(--border);padding-top:6px;margin-top:0;">
-                <div class="pat-cfg-title">
-                    <i class="fa-solid fa-circle-dot" style="font-size:0.55rem;color:#34d399;"></i>
-                    DIGITEVEN pattern &nbsp;<span style="color:var(--txt2);font-weight:400;font-size:0.48rem;">(slot 1=oldest · slot 10=newest)</span>
-                    <span class="pat-status pat-status-off" id="patStatusEven">DISABLED</span>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:2px;">
-                    <div class="pat-row" id="patRowEven"></div>
-                    <div class="pat-row" id="patIdxEven" style="gap:3px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-  </div><!-- end .left-col -->
-
-  <div class="right-col">
-    <!-- Activity Log -->
-    <div class="panel">
-        <div class="panel-hdr">
-            <div class="panel-title"><i class="fa-solid fa-terminal"></i> Activity Log</div>
-            <div class="panel-actions">
-                <button class="btn btn-ghost" onclick="copyLog()" style="padding:2px 7px;font-size:0.55rem;"><i class="fa-solid fa-copy"></i></button>
-                <button class="btn btn-ghost" onclick="clearLog()" style="padding:2px 7px;font-size:0.55rem;"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        </div>
-        <div id="log"></div>
-    </div>
-
-    <!-- Contract History -->
-    <div class="panel">
-        <div class="panel-hdr">
-            <div class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> Contract History</div>
-            <div class="panel-actions">
-                <button class="btn btn-ghost" onclick="copyHistory()" style="padding:2px 7px;font-size:0.55rem;"><i class="fa-solid fa-copy"></i></button>
-                <button class="btn btn-ghost" onclick="clearHistory()" style="padding:2px 7px;font-size:0.55rem;"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        </div>
-        <div id="historyPanel">
-            <table id="historyTable">
-                <thead>
-                    <tr>
-                        <th class="ht-sym" style="text-align:left;padding-left:5px;">Market</th>
-                        <th>Type</th><th>Stake</th><th>Time</th>
-                        <th>Digit</th><th>Barrier</th><th>Result</th><th>P/L</th>
-                    </tr>
-                </thead>
-                <tbody id="historyBody"></tbody>
-            </table>
-        </div>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="auth-card">
+    <h1>Digits Trader</h1>
+    <p>Connect your Deriv account to start trading Digits contracts with real-time WebSocket data.</p>
+    <button class="btn btn-primary" onclick="startOAuth('login')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+      Login with Deriv
+    </button>
+    <div class="divider">or</div>
+    <button class="btn btn-secondary" onclick="startOAuth('signup')">
+      Create a Deriv Account
+    </button>
+    <div style="margin-top:20px; font-size:0.75rem; color:var(--muted); line-height:1.5;">
+      By connecting you agree to Deriv's Terms of Service. This app uses OAuth 2.0 + PKCE for secure authentication.
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     GRID PANEL
-══════════════════════════════════════════════════════════ -->
-<div class="grid-wrap">
-    <div class="grid-legend">
-        <span class="badge"><i class="fa-solid fa-arrow-trend-up"></i>&nbsp;ODD / EVEN Pattern Analysis</span>
-        <span>Last 10 = <span style="color:var(--over);font-weight:700;">E</span> (even)&nbsp;/&nbsp;<span style="color:var(--under);font-weight:700;">O</span> (odd)&nbsp;/&nbsp;<span style="color:var(--txt2);font-weight:700;">·</span> (wildcard)</span>
-        <span style="color:var(--txt2);">|</span>
-        <span id="legendPatOdd" style="font-size:0.56rem;">DIGITODD: <span style="color:var(--txt2);">—</span></span>
-        <span style="color:var(--txt2);">|</span>
-        <span id="legendPatEven" style="font-size:0.56rem;">DIGITEVEN: <span style="color:var(--txt2);">—</span></span>
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="section-label">Accounts</div>
+    <div id="accounts-list">
+      <div class="empty" style="padding:20px;font-size:0.8rem;">Loading accounts…</div>
     </div>
-    <div class="grid-scroll">
-        <table class="market-grid" id="marketTable">
-            <thead>
-                <tr id="theadRow">
-                    <th class="col-market" style="text-align:left;padding-left:4px;">Market</th>
-                    <th class="col-tick">Last Tick</th>
-                    <th class="col-last4" title="Last 10 last-digits">Last 10<br><small style="font-weight:400;font-size:0.46rem;">digits</small></th>
-                    <th class="col-pattern" title="Pattern match signal">Pattern<br><small style="font-weight:400;font-size:0.46rem;">signal</small></th>
-                </tr>
-            </thead>
-            <tbody id="market-body"></tbody>
-        </table>
+
+    <div class="section-label" style="margin-top:16px;">Markets</div>
+    <div id="symbols-list">
+      <div class="empty" style="padding:20px;font-size:0.8rem;">Loading symbols…</div>
     </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('trade')">Trade</div>
+      <div class="tab" onclick="switchTab('positions')">Positions</div>
+      <div class="tab" onclick="switchTab('statement')">Statement</div>
+    </div>
+
+    <!-- TRADE TAB -->
+    <div id="tab-trade" class="tab-content active">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Balance</div>
+          <div class="stat-value" id="stat-balance">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Today P&L</div>
+          <div class="stat-value" id="stat-pnl">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value" id="stat-winrate">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Trades Today</div>
+          <div class="stat-value" id="stat-trades">0</div>
+        </div>
+      </div>
+
+      <div class="tick-display" id="tick-display" style="display:none;">
+        <div class="tick-header">
+          <span class="tick-symbol" id="tick-symbol-name">—</span>
+          <span class="tick-price flat" id="tick-price-display">—</span>
+          <span class="tick-change" id="tick-change-badge" style="display:none;"></span>
+        </div>
+        <div class="tick-tape" id="tick-tape"></div>
+      </div>
+      <div id="no-symbol-msg" class="notice">
+        ← Select a market from the sidebar to see live ticks and start trading.
+      </div>
+    </div>
+
+    <!-- POSITIONS TAB -->
+    <div id="tab-positions" class="tab-content">
+      <div id="portfolio-content">
+        <div class="empty"><div class="empty-icon">📊</div>No open positions yet.</div>
+      </div>
+    </div>
+
+    <!-- STATEMENT TAB -->
+    <div id="tab-statement" class="tab-content">
+      <div id="statement-content">
+        <div class="empty"><div class="empty-icon">📋</div>No statement data yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div class="panel-title">Place Trade</div>
+
+    <div class="notice" id="ws-status-notice">
+      <span class="ws-dot disconnected" id="ws-dot"></span>
+      <span id="ws-status-text">WebSocket disconnected</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Contract Type</label>
+      <select class="form-select" id="contract-type" onchange="onContractTypeChange()">
+        <option value="DIGITMATCH">Digit Matches</option>
+        <option value="DIGITDIFF">Digit Differs</option>
+        <option value="DIGITOVER">Digit Over</option>
+        <option value="DIGITUNDER">Digit Under</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="digit-group">
+      <label class="form-label">Digit (last digit of close price)</label>
+      <div class="digit-grid" id="digit-grid"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Duration (ticks)</label>
+      <div class="duration-grid" id="duration-grid"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Stake (USD)</label>
+      <input type="number" class="form-input" id="stake-input" value="0.35" min="0.35" step="0.01" onchange="requestProposal()">
+    </div>
+
+    <div class="proposal-box" id="proposal-box">
+      <div class="proposal-row"><span>Potential Payout</span><span class="val loading" id="prop-payout">Select market first</span></div>
+      <div class="proposal-row"><span>Stake</span><span class="val" id="prop-stake">—</span></div>
+      <div class="proposal-row"><span>Profit if won</span><span class="val profit" id="prop-profit">—</span></div>
+    </div>
+
+    <div class="trade-buttons">
+      <button class="btn btn-green btn-sm" onclick="placeTrade('BUY')" id="buy-btn" disabled>
+        <span id="buy-label">Buy</span>
+      </button>
+      <button class="btn btn-red btn-sm" onclick="placeTrade('SELL')" id="sell-btn" disabled style="display:none;">
+        Sell
+      </button>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+    <div class="panel-title">Last Digits History</div>
+    <div id="last-digits-history" style="font-size:0.78rem;color:var(--muted);">No data yet.</div>
+  </div>
+
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     MODAL — Trade Configuration
-══════════════════════════════════════════════════════════ -->
-<div id="ex1" class="modal">
-    <h3><i class="fa-solid fa-gear"></i> Trade Configuration</h3>
-    <div class="ctrl-group">
-        <label>Target Profit ($)</label>
-        <input type="number" id="txtTPmdl" value="15555.00">
-    </div>
-    <div class="ctrl-group" style="margin-top:8px;">
-        <label>Stop Loss ($)</label>
-        <input type="number" id="txtSLmdl" value="55555.00">
-    </div>
-    <div class="ctrl-group" style="margin-top:8px;">
-        <label>Initial Stake ($)</label>
-        <input type="number" id="txtStakemdl" value="1.00" step="0.01">
-    </div>
-    <div class="modal-row">
-        <a href="#" rel="modal:close" class="btn btn-ghost" style="flex:1;justify-content:center;">Cancel</a>
-        <a href="#" rel="modal:close" class="btn btn-start" style="flex:1;justify-content:center;text-decoration:none;" onclick="AutoTrade()">
-            <i class="fa-solid fa-rocket"></i> Start Bot
-        </a>
-    </div>
-</div>
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  CONFIG  ← update WORKER_URL after deploying the CF Worker
-// ═══════════════════════════════════════════════════════════
-const OAUTH_CLIENT_ID  = '3386rHtrRkbWFzxo0gwdh';
-const REDIRECT_URI     = 'https://skimotho.github.io/deriv-trader/';
-const DERIV_AUTH_URL   = 'https://auth.deriv.com/oauth2/auth';
-// Your deployed Cloudflare Worker URL — replace after deployment:
-const WORKER_URL       = 'https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev';
-const DERIV_API_BASE   = 'https://api.derivws.com';
-const PUBLIC_WS_URL    = 'wss://api.derivws.com/trading/v1/options/ws/public';
-const SCOPES           = 'trade account_manage';
-
-// ═══════════════════════════════════════════════════════════
-//  APP GLOBALS
-// ═══════════════════════════════════════════════════════════
-let accessToken     = null;   // JWT from OAuth flow
-let currentAccount  = null;   // { accountId, currency, isDemo }
-let ws              = null;
-let intentionalClose = false;
-let wsReconnectTimer = null;
-
-let total_profit = 0, max_profit = 0, max_drawdown = 0;
-let auto_trade   = false;
-let wins = 0, loss = 0;
-const theAppID   = OAUTH_CLIENT_ID;
-let activityCount = 0, historyCount = 0;
-
-const symbols = [
-    "1HZ10V","1HZ15V","1HZ25V","1HZ30V","1HZ50V",
-    "1HZ75V","1HZ90V","1HZ100V",
-    "JD10","JD25","JD50","JD75","JD100"
-];
-const displayNames = {
-    "1HZ10V":"Volatility 10","1HZ15V":"Volatility 15","1HZ25V":"Volatility 25",
-    "1HZ30V":"Volatility 30","1HZ50V":"Volatility 50","1HZ75V":"Volatility 75",
-    "1HZ90V":"Volatility 90","1HZ100V":"Volatility 100",
-    "JD10":"Jump 10","JD25":"Jump 25","JD50":"Jump 50","JD75":"Jump 75","JD100":"Jump 100"
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const CONFIG = {
+  CLIENT_ID:    '3386rHtrRkbWFzxo0gwdh',
+  APP_ID:       '3386rHtrRkbWFzxo0gwdh',  // Deriv-App-ID header
+  REDIRECT_URI: 'https://skimotho.github.io/deriv-trader/',
+  AUTH_URL:     'https://auth.deriv.com/oauth2/auth',
+  TOKEN_URL:    'https://auth.deriv.com/oauth2/token',
+  API_BASE:     'https://api.derivws.com',
+  SCOPE:        'trade account_manage',
+  WS_PUBLIC:    'wss://api.derivws.com/trading/v1/options/ws/public',
 };
 
-const PATTERN_LEN = 10;
-let patternOdd  = Array(PATTERN_LEN).fill('*');
-let patternEven = Array(PATTERN_LEN).fill('*');
-(function initDefaultPatterns() {
-    let oddDef  = ['E','E','E','E','O','E'];
-    let evenDef = ['O','O','O','O','E','O'];
-    for (let i = 0; i < 6; i++) {
-        patternOdd[4 + i]  = oddDef[i];
-        patternEven[4 + i] = evenDef[i];
-    }
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let state = {
+  accessToken: null,
+  accounts: [],
+  activeAccount: null,
+  ws: null,
+  wsAuthenticated: false,
+  currentSymbol: null,
+  ticks: [],
+  lastDigits: [],
+  proposal: null,
+  positions: [],
+  statement: [],
+  selectedDigit: 5,
+  selectedDuration: 5,
+  sessionStats: { pnl: 0, wins: 0, trades: 0 },
+  proposalId: null,
+  proposalTimer: null,
+  theme: 'dark',
+};
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.classList.toggle('light', state.theme === 'light');
+  document.getElementById('theme-toggle').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('deriv_theme', state.theme);
+}
+(function() {
+  const saved = localStorage.getItem('deriv_theme');
+  if (saved === 'light') { document.body.classList.add('light'); state.theme = 'light'; document.getElementById('theme-toggle').textContent = '🌙'; }
 })();
 
-let arrLDData    = {};
-let pipSize      = {};
-let digitHistory = {};
-let tickBuySent  = {};
-let simMode          = false;
-let allLoses         = [];
-let globalNextStake  = null;
-let baseStakeValue   = 1.0;
-let contractMeta     = {};
-let tempIdCounter    = 0;
-let contractConfirmed = new Set();
-let pendingContracts = {};
-
-symbols.forEach(sym => {
-    arrLDData[sym]     = [];
-    pipSize[sym]       = 2;
-    digitHistory[sym]  = [];
-    tickBuySent[sym]   = { odd: false, even: false };
-    pendingContracts[sym] = [];
-});
-
-// ═══════════════════════════════════════════════════════════
-//  PKCE HELPERS
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// OAUTH 2.0 + PKCE
+// ═══════════════════════════════════════════════
 async function generatePKCE() {
-    const array = crypto.getRandomValues(new Uint8Array(64));
-    const codeVerifier = Array.from(array)
-        .map(v => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'[v % 66])
-        .join('');
-    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
-    const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
-        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const state = crypto.getRandomValues(new Uint8Array(16))
-        .reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
-    return { codeVerifier, codeChallenge, state };
+  const array = crypto.getRandomValues(new Uint8Array(64));
+  const codeVerifier = Array.from(array)
+    .map(v => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'[v % 66])
+    .join('');
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+  const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return { codeVerifier, codeChallenge };
 }
 
-async function startOAuthLogin() {
-    await doOAuthRedirect(false);
-}
-async function startOAuthSignup() {
-    await doOAuthRedirect(true);
+async function startOAuth(mode) {
+  const { codeVerifier, codeChallenge } = await generatePKCE();
+  const oauthState = crypto.getRandomValues(new Uint8Array(16))
+    .reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
+
+  sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+  sessionStorage.setItem('oauth_state', oauthState);
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id:     CONFIG.CLIENT_ID,
+    redirect_uri:  CONFIG.REDIRECT_URI,
+    scope:         CONFIG.SCOPE,
+    state:         oauthState,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+  });
+  if (mode === 'signup') params.set('prompt', 'registration');
+
+  window.location.href = `${CONFIG.AUTH_URL}?${params}`;
 }
 
-async function doOAuthRedirect(isSignup) {
-    setLoginStatus('Preparing login…', 'connecting');
-    const { codeVerifier, codeChallenge, state } = await generatePKCE();
-    sessionStorage.setItem('pkce_code_verifier', codeVerifier);
-    sessionStorage.setItem('oauth_state', state);
+async function handleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code  = params.get('code');
+  const returnedState = params.get('state');
+  const error = params.get('error');
 
-    const params = new URLSearchParams({
-        response_type:          'code',
-        client_id:              OAUTH_CLIENT_ID,
-        redirect_uri:           REDIRECT_URI,
-        scope:                  SCOPES,
-        state:                  state,
-        code_challenge:         codeChallenge,
-        code_challenge_method:  'S256',
+  if (error) {
+    showToast(`Auth error: ${params.get('error_description') || error}`, 'error');
+    return;
+  }
+  if (!code) return;
+
+  const storedState    = sessionStorage.getItem('oauth_state');
+  const codeVerifier   = sessionStorage.getItem('pkce_code_verifier');
+
+  if (returnedState !== storedState) {
+    showToast('State mismatch — possible CSRF attack. Login aborted.', 'error');
+    return;
+  }
+
+  // Clean URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  // Exchange code for token
+  showToast('Exchanging auth code for token…', 'info');
+  try {
+    const res = await fetch(CONFIG.TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'authorization_code',
+        client_id:     CONFIG.CLIENT_ID,
+        code:          code,
+        code_verifier: codeVerifier,
+        redirect_uri:  CONFIG.REDIRECT_URI,
+      }),
     });
-    if (isSignup) params.set('prompt', 'registration');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.error || 'Token exchange failed');
 
-    window.location.href = `${DERIV_AUTH_URL}?${params.toString()}`;
+    sessionStorage.removeItem('pkce_code_verifier');
+    sessionStorage.removeItem('oauth_state');
+
+    state.accessToken = data.access_token;
+    sessionStorage.setItem('deriv_access_token', data.access_token);
+    sessionStorage.setItem('deriv_token_expiry', Date.now() + data.expires_in * 1000);
+
+    await initApp();
+  } catch(e) {
+    showToast(`Token error: ${e.message}`, 'error');
+    console.error(e);
+  }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  OAUTH CALLBACK HANDLER  (runs on page load if ?code= present)
-// ═══════════════════════════════════════════════════════════
-async function handleOAuthCallback() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code      = urlParams.get('code');
-    const state     = urlParams.get('state');
-    const error     = urlParams.get('error');
+// ═══════════════════════════════════════════════
+// APP INIT
+// ═══════════════════════════════════════════════
+async function initApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'grid';
 
-    if (error) {
-        showLoginError(`Login error: ${urlParams.get('error_description') || error}`);
-        return;
-    }
-    if (!code) return; // no callback params — normal page load
+  // Add topbar controls
+  document.getElementById('topbar-right').innerHTML = `
+    <span id="account-env-badge" class="badge demo">DEMO</span>
+    <span style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--muted);margin-right:4px;" id="topbar-balance">—</span>
+    <span class="icon-btn" title="Toggle theme" onclick="toggleTheme()" id="theme-toggle">${state.theme==='dark'?'☀️':'🌙'}</span>
+    <button class="btn btn-secondary btn-sm" onclick="logout()" style="width:auto;">Logout</button>
+  `;
 
-    setLoginStatus('Exchanging code for token…', 'connecting');
-
-    // Verify CSRF state
-    const savedState = sessionStorage.getItem('oauth_state');
-    if (!savedState || savedState !== state) {
-        showLoginError('Security error: state mismatch. Please try again.');
-        return;
-    }
-
-    const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
-    if (!codeVerifier) {
-        showLoginError('Missing PKCE verifier. Please try again.');
-        return;
-    }
-
-    // Clean URL without reloading (remove ?code=&state= from address bar)
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    try {
-        // Call your Cloudflare Worker to do the token exchange (keeps client_secret secure)
-        const resp = await fetch(`${WORKER_URL}/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                code,
-                code_verifier: codeVerifier,
-                redirect_uri:  REDIRECT_URI,
-            })
-        });
-
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err.error || `Token exchange failed (${resp.status})`);
-        }
-
-        const data = await resp.json();
-        if (!data.access_token) throw new Error('No access token in response');
-
-        accessToken = data.access_token;
-
-        // Clear PKCE values immediately after successful exchange
-        sessionStorage.removeItem('pkce_code_verifier');
-        sessionStorage.removeItem('oauth_state');
-
-        setLoginStatus('Fetching accounts…', 'connecting');
-        await fetchAndShowAccounts();
-
-    } catch (e) {
-        showLoginError(`Authentication failed: ${e.message}`);
-    }
+  buildDigitGrid();
+  buildDurationGrid();
+  await loadAccounts();
+  loadSymbols();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  ACCOUNT SELECTION
-// ═══════════════════════════════════════════════════════════
-async function fetchAndShowAccounts() {
-    try {
-        const resp = await fetch(`${DERIV_API_BASE}/trading/v1/options/accounts`, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Deriv-App-ID':  OAUTH_CLIENT_ID,
-            }
-        });
-        if (!resp.ok) throw new Error(`Failed to fetch accounts (${resp.status})`);
-        const data = await resp.json();
-        const accounts = data.data || data.accounts || [];
-
-        if (!accounts.length) {
-            // No options account yet — create a demo one
-            setLoginStatus('Creating demo account…', 'connecting');
-            await createDemoAccount();
-            return;
-        }
-
-        showAccountSelector(accounts);
-    } catch (e) {
-        showLoginError(`Could not load accounts: ${e.message}`);
-    }
+// ═══════════════════════════════════════════════
+// ACCOUNTS
+// ═══════════════════════════════════════════════
+async function loadAccounts() {
+  try {
+    const res = await apiGet('/trading/v1/options/accounts');
+    const accounts = res.data || res.accounts || res || [];
+    state.accounts = Array.isArray(accounts) ? accounts : [accounts];
+    renderAccounts();
+    if (state.accounts.length > 0) selectAccount(state.accounts[0]);
+  } catch(e) {
+    console.error('Accounts error:', e);
+    showToast('Could not load accounts: ' + e.message, 'error');
+    document.getElementById('accounts-list').innerHTML = `<div class="notice" style="font-size:0.78rem;">${e.message}</div>`;
+  }
 }
 
-async function createDemoAccount() {
-    try {
-        const resp = await fetch(`${DERIV_API_BASE}/trading/v1/options/accounts`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Deriv-App-ID':  OAUTH_CLIENT_ID,
-                'Content-Type':  'application/json',
-            },
-            body: JSON.stringify({ currency: 'USD', group: 'row', account_type: 'demo' })
-        });
-        if (!resp.ok) throw new Error(`Account creation failed (${resp.status})`);
-        const data = await resp.json();
-        const acct = data.data || data;
-        await fetchAndShowAccounts();
-    } catch (e) {
-        showLoginError(`Could not create account: ${e.message}`);
-    }
+function renderAccounts() {
+  const el = document.getElementById('accounts-list');
+  if (!state.accounts.length) { el.innerHTML = '<div class="empty" style="padding:16px;font-size:0.8rem;">No accounts found.</div>'; return; }
+  el.innerHTML = state.accounts.map((ac, i) => {
+    const isDemo = ac.account_type === 'demo' || (ac.id||'').toLowerCase().includes('demo') || ac.is_virtual;
+    return `
+    <div class="account-card ${i===0?'active':''}" onclick="selectAccount(${JSON.stringify(ac).replace(/"/g,'&quot;')}, this)">
+      <div class="ac-id">${ac.id || ac.account_id || '—'}</div>
+      <div class="ac-bal">${ac.currency||'USD'} ${parseFloat(ac.balance||0).toFixed(2)}</div>
+      <div class="ac-type"><span class="badge ${isDemo?'demo':'live'}">${isDemo?'DEMO':'LIVE'}</span></div>
+    </div>`;
+  }).join('');
 }
 
-function showAccountSelector(accounts) {
-    document.getElementById('loginButtons').style.display = 'none';
-    const sel = document.getElementById('accountSelector');
-    sel.style.display = 'flex';
-    const list = document.getElementById('acctList');
-    list.innerHTML = '';
+function selectAccount(ac, el) {
+  if (typeof ac === 'string') ac = JSON.parse(ac);
+  state.activeAccount = ac;
 
-    accounts.forEach(acct => {
-        // account objects: { account_id, currency, account_type } or similar
-        const id       = acct.account_id || acct.id;
-        const currency = acct.currency || 'USD';
-        const isDemo   = (acct.account_type || '').toLowerCase().includes('demo')
-                      || (acct.id || '').toUpperCase().startsWith('VRT')
-                      || (acct.id || '').toUpperCase().startsWith('DOT9');
-        const btn = document.createElement('div');
-        btn.className = `acct-btn ${isDemo ? 'demo-acct' : 'real-acct'}`;
-        btn.innerHTML = `
-            <div>
-                <div class="acct-name">${id}</div>
-                <div class="acct-type">${isDemo ? '🧪 Demo' : '💰 Real'} · ${currency}</div>
-            </div>
-            <i class="fa-solid fa-chevron-right" style="color:var(--txt2);font-size:0.6rem;"></i>
-        `;
-        btn.onclick = () => selectAccount({ accountId: id, currency, isDemo });
-        list.appendChild(btn);
+  document.querySelectorAll('.account-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const isDemo = ac.account_type === 'demo' || (ac.id||'').toLowerCase().includes('demo') || ac.is_virtual;
+  const badge = document.getElementById('account-env-badge');
+  if (badge) {
+    badge.textContent = isDemo ? 'DEMO' : 'LIVE';
+    badge.className = `badge ${isDemo ? 'demo' : 'live'}`;
+  }
+
+  document.getElementById('stat-balance').textContent = `${ac.currency||'USD'} ${parseFloat(ac.balance||0).toFixed(2)}`;
+  const balEl = document.getElementById('topbar-balance');
+  if (balEl) balEl.textContent = `${ac.currency||'USD'} ${parseFloat(ac.balance||0).toFixed(2)}`;
+
+  // Connect WS for this account
+  connectWebSocket(ac);
+}
+
+// ═══════════════════════════════════════════════
+// REST API HELPER
+// ═══════════════════════════════════════════════
+async function apiGet(path) {
+  const res = await fetch(`${CONFIG.API_BASE}${path}`, {
+    headers: {
+      'Authorization': `Bearer ${state.accessToken}`,
+      'Deriv-App-ID': CONFIG.APP_ID,
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({message:'Unknown error'}));
+    throw new Error(err.errors?.[0]?.message || err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(`${CONFIG.API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${state.accessToken}`,
+      'Deriv-App-ID': CONFIG.APP_ID,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({message:'Unknown error'}));
+    throw new Error(err.errors?.[0]?.message || err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ═══════════════════════════════════════════════
+// WEBSOCKET
+// ═══════════════════════════════════════════════
+async function connectWebSocket(account) {
+  if (state.ws) { state.ws.close(); state.ws = null; }
+  setWsStatus('connecting');
+
+  try {
+    const accountId = account.id || account.account_id;
+    if (!accountId) throw new Error('No account ID');
+
+    const otpRes = await apiPost(`/trading/v1/options/accounts/${accountId}/otp`, {});
+    const wsUrl = otpRes?.data?.url || otpRes?.url;
+    if (!wsUrl) throw new Error('No WebSocket URL in OTP response');
+
+    state.ws = new WebSocket(wsUrl);
+  } catch(e) {
+    console.warn('Authenticated WS failed, using public WS:', e.message);
+    state.ws = new WebSocket(CONFIG.WS_PUBLIC);
+  }
+
+  state.ws.onopen = () => {
+    setWsStatus('connected');
+    state.wsAuthenticated = true;
+    showToast('WebSocket connected', 'success');
+    enableTradePanel();
+    if (state.currentSymbol) subscribeToTicks(state.currentSymbol);
+  };
+
+  state.ws.onmessage = (event) => {
+    try { handleWsMessage(JSON.parse(event.data)); }
+    catch(e) { console.warn('WS parse error', e); }
+  };
+
+  state.ws.onerror = () => setWsStatus('disconnected');
+  state.ws.onclose = () => {
+    setWsStatus('disconnected');
+    state.wsAuthenticated = false;
+    disableTradePanel();
+    setTimeout(() => { if (state.activeAccount) connectWebSocket(state.activeAccount); }, 5000);
+  };
+}
+
+function setWsStatus(s) {
+  const dot = document.getElementById('ws-dot');
+  const txt = document.getElementById('ws-status-text');
+  if (!dot) return;
+  dot.className = `ws-dot ${s}`;
+  txt.textContent = { connected:'Connected', disconnected:'Disconnected', connecting:'Connecting…' }[s];
+}
+
+function wsSend(obj) {
+  if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+    state.ws.send(JSON.stringify(obj));
+  }
+}
+
+function handleWsMessage(msg) {
+  const type = msg.msg_type || msg.type;
+
+  if (type === 'tick') {
+    handleTick(msg.tick || msg);
+  } else if (type === 'proposal') {
+    handleProposal(msg.proposal || msg);
+  } else if (type === 'buy') {
+    handleBuyResponse(msg.buy || msg);
+  } else if (type === 'balance') {
+    handleBalance(msg.balance || msg);
+  } else if (type === 'portfolio') {
+    handlePortfolio(msg.portfolio || msg);
+  } else if (type === 'statement') {
+    handleStatement(msg.statement || msg);
+  } else if (type === 'proposal_open_contract') {
+    handlePOC(msg.proposal_open_contract || msg);
+  } else if (msg.error) {
+    showToast(msg.error.message || 'API error', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SYMBOLS / TICKS
+// ═══════════════════════════════════════════════
+function loadSymbols() {
+  // Curated digit-compatible symbols
+  const symbols = [
+    { symbol:'R_10',  display:'Volatility 10',  class:'volatility' },
+    { symbol:'R_25',  display:'Volatility 25',  class:'volatility' },
+    { symbol:'R_50',  display:'Volatility 50',  class:'volatility' },
+    { symbol:'R_75',  display:'Volatility 75',  class:'volatility' },
+    { symbol:'R_100', display:'Volatility 100', class:'volatility' },
+    { symbol:'1HZ10V',  display:'Volatility 10 (1s)',  class:'hf' },
+    { symbol:'1HZ100V', display:'Volatility 100 (1s)', class:'hf' },
+  ];
+
+  const el = document.getElementById('symbols-list');
+  el.innerHTML = symbols.map(s => `
+    <div class="symbol-item" id="sym-${s.symbol}" onclick="selectSymbol('${s.symbol}','${s.display}')">
+      <span class="sym-name">${s.display}</span>
+      <span class="sym-tick" id="tick-${s.symbol}">—</span>
+    </div>
+  `).join('');
+}
+
+function selectSymbol(symbol, display) {
+  if (state.currentSymbol === symbol) return;
+
+  // Stop previous subscription
+  if (state.currentSymbol) {
+    wsSend({ forget_all: 'ticks' });
+  }
+
+  document.querySelectorAll('.symbol-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(`sym-${symbol}`);
+  if (el) el.classList.add('active');
+
+  state.currentSymbol = symbol;
+  state.ticks = [];
+  state.lastDigits = [];
+
+  document.getElementById('tick-symbol-name').textContent = display;
+  document.getElementById('tick-price-display').textContent = '…';
+  document.getElementById('tick-price-display').className = 'tick-price flat';
+  document.getElementById('tick-display').style.display = 'block';
+  document.getElementById('no-symbol-msg').style.display = 'none';
+  document.getElementById('tick-tape').innerHTML = '';
+  document.getElementById('last-digits-history').textContent = 'Waiting for ticks…';
+
+  subscribeToTicks(symbol);
+  clearProposal();
+  requestProposal();
+}
+
+function subscribeToTicks(symbol) {
+  wsSend({ ticks: symbol, subscribe: 1 });
+}
+
+function handleTick(tick) {
+  const price  = parseFloat(tick.quote || tick.price || 0);
+  const symbol = tick.symbol;
+  const prev   = state.ticks[state.ticks.length - 1];
+  const dir    = prev ? (price > prev ? 'up' : price < prev ? 'down' : 'flat') : 'flat';
+
+  state.ticks.push(price);
+  if (state.ticks.length > 100) state.ticks.shift();
+
+  const lastDigit = Math.floor(Math.abs(price) * 10) % 10;
+  state.lastDigits.push(lastDigit);
+  if (state.lastDigits.length > 50) state.lastDigits.shift();
+
+  // Update sidebar tick
+  if (symbol) {
+    const tickEl = document.getElementById(`tick-${symbol}`);
+    if (tickEl) {
+      tickEl.textContent = price.toFixed(2);
+      tickEl.className = `sym-tick sym-${dir}`;
+    }
+  }
+
+  // Update main display
+  if (symbol === state.currentSymbol || !symbol) {
+    const priceEl = document.getElementById('tick-price-display');
+    priceEl.textContent = price.toFixed(tick.pip_size || 2);
+    priceEl.className = `tick-price ${dir}`;
+
+    // change badge
+    const changeBadge = document.getElementById('tick-change-badge');
+    if (prev) {
+      const chg = ((price - prev) / prev * 100).toFixed(3);
+      changeBadge.textContent = `${dir === 'up' ? '+' : ''}${chg}%`;
+      changeBadge.className = `tick-change ${dir}`;
+      changeBadge.style.display = 'inline-block';
+    }
+
+    // Tape
+    updateTickTape(lastDigit);
+    updateDigitsHistory();
+  }
+}
+
+function updateTickTape(digit) {
+  const tape = document.getElementById('tick-tape');
+  const dot = document.createElement('div');
+  dot.className = `tick-dot ${digit % 2 === 0 ? 'even' : 'odd'}`;
+  dot.textContent = digit;
+  tape.appendChild(dot);
+  while (tape.children.length > 20) tape.removeChild(tape.firstChild);
+}
+
+function updateDigitsHistory() {
+  const el = document.getElementById('last-digits-history');
+  if (!el) return;
+  const counts = Array(10).fill(0);
+  state.lastDigits.forEach(d => counts[d]++);
+  const total = state.lastDigits.length || 1;
+  el.innerHTML = counts.map((c, d) =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:'Space Mono',monospace;">Digit ${d}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div style="width:${(c/total*100).toFixed(0)}%;height:100%;background:var(--accent);transition:width 0.3s;"></div>
+        </div>
+        <span style="font-family:'Space Mono',monospace;color:var(--muted);">${(c/total*100).toFixed(0)}%</span>
+      </div>
+    </div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TRADE FORM
+// ═══════════════════════════════════════════════
+function buildDigitGrid() {
+  const grid = document.getElementById('digit-grid');
+  grid.innerHTML = Array.from({length:10},(_,i)=>
+    `<button class="digit-btn ${i===5?'selected':''}" onclick="selectDigit(${i})">${i}</button>`
+  ).join('');
+}
+
+function selectDigit(d) {
+  state.selectedDigit = d;
+  document.querySelectorAll('.digit-btn').forEach((b,i) => b.classList.toggle('selected', i===d));
+  requestProposal();
+}
+
+function buildDurationGrid() {
+  const durations = [1, 3, 5, 10];
+  const grid = document.getElementById('duration-grid');
+  grid.innerHTML = durations.map(d =>
+    `<button class="dur-btn ${d===5?'selected':''}" onclick="selectDuration(${d})">${d}t</button>`
+  ).join('');
+}
+
+function selectDuration(d) {
+  state.selectedDuration = d;
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.toggle('selected', b.textContent === `${d}t`));
+  requestProposal();
+}
+
+function onContractTypeChange() {
+  const type = document.getElementById('contract-type').value;
+  const showDigit = ['DIGITMATCH','DIGITDIFF','DIGITOVER','DIGITUNDER'].includes(type);
+  document.getElementById('digit-group').style.display = showDigit ? 'block' : 'none';
+  requestProposal();
+}
+
+// ═══════════════════════════════════════════════
+// PROPOSAL
+// ═══════════════════════════════════════════════
+function requestProposal() {
+  if (!state.currentSymbol || !state.wsAuthenticated) return;
+  clearTimeout(state.proposalTimer);
+  state.proposalTimer = setTimeout(_doProposal, 400);
+}
+
+function _doProposal() {
+  if (state.proposalId) {
+    wsSend({ forget: state.proposalId });
+    state.proposalId = null;
+  }
+  const type   = document.getElementById('contract-type').value;
+  const stake  = parseFloat(document.getElementById('stake-input').value) || 0.35;
+  const dur    = state.selectedDuration;
+
+  document.getElementById('prop-payout').textContent = 'Loading…';
+  document.getElementById('prop-payout').className = 'val loading';
+
+  const req = {
+    proposal: 1,
+    subscribe: 1,
+    amount: stake,
+    basis: 'stake',
+    contract_type: type,
+    currency: 'USD',
+    symbol: state.currentSymbol,
+    duration: dur,
+    duration_unit: 't',
+  };
+  if (['DIGITMATCH','DIGITDIFF','DIGITOVER','DIGITUNDER'].includes(type)) {
+    req.barrier = String(state.selectedDigit);
+  }
+  wsSend(req);
+}
+
+function handleProposal(proposal) {
+  state.proposal = proposal;
+  state.proposalId = proposal.id;
+  const payout = parseFloat(proposal.payout || 0);
+  const stake  = parseFloat(document.getElementById('stake-input').value) || 0.35;
+  const profit = (payout - stake).toFixed(2);
+
+  document.getElementById('prop-payout').textContent = `USD ${payout.toFixed(2)}`;
+  document.getElementById('prop-payout').className = 'val';
+  document.getElementById('prop-stake').textContent = `USD ${stake.toFixed(2)}`;
+  document.getElementById('prop-profit').textContent = `+USD ${profit}`;
+  document.getElementById('prop-profit').style.color = profit > 0 ? 'var(--green)' : 'var(--muted)';
+
+  document.getElementById('buy-btn').disabled = false;
+}
+
+function clearProposal() {
+  if (state.proposalId) { wsSend({ forget: state.proposalId }); state.proposalId = null; }
+  state.proposal = null;
+  document.getElementById('prop-payout').textContent = 'Select market first';
+  document.getElementById('prop-payout').className = 'val loading';
+  document.getElementById('prop-stake').textContent = '—';
+  document.getElementById('prop-profit').textContent = '—';
+  document.getElementById('buy-btn').disabled = true;
+}
+
+// ═══════════════════════════════════════════════
+// BUY / TRADE
+// ═══════════════════════════════════════════════
+function placeTrade(action) {
+  if (!state.proposal) { showToast('No proposal available.', 'error'); return; }
+
+  const buyBtn = document.getElementById('buy-btn');
+  buyBtn.innerHTML = '<span class="spinner"></span>';
+  buyBtn.disabled = true;
+
+  wsSend({
+    buy: state.proposal.id,
+    price: parseFloat(document.getElementById('stake-input').value) || 0.35,
+  });
+}
+
+function handleBuyResponse(buy) {
+  const buyBtn = document.getElementById('buy-btn');
+  buyBtn.innerHTML = '<span id="buy-label">Buy</span>';
+  buyBtn.disabled = false;
+
+  if (buy.error) {
+    showToast(`Trade failed: ${buy.error.message}`, 'error');
+    return;
+  }
+
+  state.sessionStats.trades++;
+  document.getElementById('stat-trades').textContent = state.sessionStats.trades;
+
+  showToast(`✅ Contract #${buy.contract_id || buy.id} purchased!`, 'success');
+
+  // Add to positions
+  const pos = {
+    id: buy.contract_id || buy.id,
+    type: document.getElementById('contract-type').value,
+    symbol: state.currentSymbol,
+    stake: parseFloat(document.getElementById('stake-input').value),
+    digit: state.selectedDigit,
+    duration: state.selectedDuration,
+    status: 'open',
+    time: new Date().toLocaleTimeString(),
+    payout: state.proposal?.payout || 0,
+  };
+  state.positions.unshift(pos);
+  renderPortfolio();
+
+  // Subscribe to contract updates
+  if (buy.contract_id) wsSend({ proposal_open_contract: 1, contract_id: buy.contract_id, subscribe: 1 });
+
+  // Refresh proposal
+  setTimeout(requestProposal, 500);
+}
+
+function handlePOC(poc) {
+  const pos = state.positions.find(p => String(p.id) === String(poc.contract_id));
+  if (!pos) return;
+  if (poc.status === 'won' || poc.status === 'lost') {
+    pos.status = poc.status;
+    if (poc.status === 'won') {
+      const profit = parseFloat(poc.profit || 0);
+      state.sessionStats.wins++;
+      state.sessionStats.pnl += profit;
+      showToast(`🏆 Won! +USD ${profit.toFixed(2)}`, 'success');
+    } else {
+      state.sessionStats.pnl -= pos.stake;
+      showToast(`❌ Lost. -USD ${pos.stake.toFixed(2)}`, 'error');
+    }
+    updateStats();
+    renderPortfolio();
+    addToStatement(pos, poc);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PORTFOLIO / STATEMENT
+// ═══════════════════════════════════════════════
+function renderPortfolio() {
+  const el = document.getElementById('portfolio-content');
+  if (!state.positions.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No positions yet.</div>';
+    return;
+  }
+  el.innerHTML = state.positions.map(p => `
+    <div class="position-card">
+      <div class="pos-header">
+        <span class="pos-id">#${p.id}</span>
+        <span class="pos-status ${p.status}">${p.status.toUpperCase()}</span>
+      </div>
+      <div class="pos-details">
+        <div class="pos-detail"><div class="label">Type</div><div class="value">${p.type}</div></div>
+        <div class="pos-detail"><div class="label">Digit</div><div class="value">${p.digit}</div></div>
+        <div class="pos-detail"><div class="label">Stake</div><div class="value">USD ${p.stake.toFixed(2)}</div></div>
+        <div class="pos-detail"><div class="label">Symbol</div><div class="value">${p.symbol}</div></div>
+        <div class="pos-detail"><div class="label">Duration</div><div class="value">${p.duration} ticks</div></div>
+        <div class="pos-detail"><div class="label">Time</div><div class="value">${p.time}</div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToStatement(pos, poc) {
+  state.statement.unshift({
+    id: pos.id,
+    time: pos.time,
+    type: pos.type,
+    symbol: pos.symbol,
+    stake: pos.stake,
+    payout: poc.payout || 0,
+    profit: parseFloat(poc.profit || 0),
+    status: pos.status,
+  });
+  renderStatement();
+}
+
+function renderStatement() {
+  const el = document.getElementById('statement-content');
+  if (!state.statement.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No closed trades yet.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <table class="statement-table">
+      <thead><tr>
+        <th>#ID</th><th>Time</th><th>Type</th><th>Symbol</th>
+        <th>Stake</th><th>Payout</th><th>P&L</th><th>Result</th>
+      </tr></thead>
+      <tbody>
+      ${state.statement.map(s => `
+        <tr>
+          <td style="font-family:'Space Mono',monospace;font-size:0.78rem;">${s.id}</td>
+          <td>${s.time}</td>
+          <td>${s.type}</td>
+          <td>${s.symbol}</td>
+          <td>USD ${s.stake.toFixed(2)}</td>
+          <td>USD ${parseFloat(s.payout).toFixed(2)}</td>
+          <td class="${s.profit >= 0 ? 'profit-cell' : 'loss-cell'}">${s.profit >= 0 ? '+' : ''}USD ${s.profit.toFixed(2)}</td>
+          <td><span class="pos-status ${s.status}" style="font-size:0.7rem;">${s.status.toUpperCase()}</span></td>
+        </tr>
+      `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function handleBalance(balance) {
+  const bal = parseFloat(balance.balance || 0).toFixed(2);
+  const cur = balance.currency || 'USD';
+  document.getElementById('stat-balance').textContent = `${cur} ${bal}`;
+  const balEl = document.getElementById('topbar-balance');
+  if (balEl) balEl.textContent = `${cur} ${bal}`;
+}
+
+function handlePortfolio(portfolio) {
+  const contracts = portfolio.contracts || [];
+  contracts.forEach(c => {
+    if (!state.positions.find(p => String(p.id) === String(c.contract_id))) {
+      state.positions.push({
+        id: c.contract_id,
+        type: c.contract_type,
+        symbol: c.underlying || c.symbol,
+        stake: parseFloat(c.buy_price || 0),
+        digit: c.barrier || '—',
+        duration: '—',
+        status: 'open',
+        time: new Date(c.date_start * 1000).toLocaleTimeString(),
+        payout: parseFloat(c.payout || 0),
+      });
+    }
+  });
+  renderPortfolio();
+}
+
+function handleStatement(stmt) {
+  (stmt.transactions || []).forEach(t => {
+    state.statement.push({
+      id: t.transaction_id,
+      time: new Date(t.transaction_time * 1000).toLocaleTimeString(),
+      type: t.action_type,
+      symbol: t.symbol || '—',
+      stake: parseFloat(t.amount || 0),
+      payout: 0,
+      profit: parseFloat(t.amount || 0),
+      status: t.action_type,
     });
-
-    setLoginStatus('Choose an account to continue', '');
+  });
+  renderStatement();
 }
 
-async function selectAccount(acct) {
-    currentAccount = acct;
-    setLoginStatus(`Connecting to ${acct.accountId}…`, 'connecting');
-    try {
-        await connectWebSocket();
-    } catch (e) {
-        showLoginError(`WebSocket connection failed: ${e.message}`);
-    }
+function updateStats() {
+  const pnl = state.sessionStats.pnl;
+  const pnlEl = document.getElementById('stat-pnl');
+  pnlEl.textContent = `${pnl >= 0 ? '+' : ''}USD ${pnl.toFixed(2)}`;
+  pnlEl.className = `stat-value ${pnl >= 0 ? 'green' : 'red'}`;
+
+  const wr = state.sessionStats.trades ? (state.sessionStats.wins / state.sessionStats.trades * 100).toFixed(0) : 0;
+  const wrEl = document.getElementById('stat-winrate');
+  wrEl.textContent = `${wr}%`;
+  wrEl.className = `stat-value ${wr >= 50 ? 'green' : 'red'}`;
+
+  document.getElementById('stat-trades').textContent = state.sessionStats.trades;
 }
 
-// ═══════════════════════════════════════════════════════════
-//  WEBSOCKET — new platform (OTP-authenticated URL)
-// ═══════════════════════════════════════════════════════════
-async function getOTPWebSocketUrl() {
-    const resp = await fetch(
-        `${DERIV_API_BASE}/trading/v1/options/accounts/${currentAccount.accountId}/otp`,
-        {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Deriv-App-ID':  OAUTH_CLIENT_ID,
-            }
-        }
-    );
-    if (!resp.ok) throw new Error(`OTP request failed (${resp.status})`);
-    const data = await resp.json();
-    return data.data?.url || data.url;
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['trade','positions','statement'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+
+  if (tab === 'positions') { wsSend({ portfolio: 1 }); }
+  if (tab === 'statement') { wsSend({ statement: 1, description: 1 }); }
 }
 
-async function connectWebSocket() {
-    if (intentionalClose) return;
-    if (ws && ws.readyState === WebSocket.CONNECTING) return;
-
-    setWsStatus('connecting', 'Requesting authenticated WebSocket URL…');
-    writeLog('#94a3b8', '🔌 Requesting OTP WebSocket URL…');
-
-    const wsUrl = await getOTPWebSocketUrl();
-    writeLog('#60a5fa', `🔗 Connecting to: ${wsUrl.split('?')[0]}…`);
-
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-        setWsStatus('ok', `Connected · ${currentAccount.accountId} (${currentAccount.isDemo ? 'Demo' : 'Real'})`);
-        writeLog('#10b981', `✅ WebSocket connected · ${currentAccount.accountId}`);
-        document.getElementById('wsAccountLabel').textContent =
-            `${currentAccount.accountId} (${currentAccount.currency})`;
-
-        // Hide login overlay — we're in!
-        document.getElementById('loginOverlay').style.display = 'none';
-
-        // Show user badge in header
-        document.getElementById('userBadge').style.display = 'flex';
-        document.getElementById('userBadgeText').textContent =
-            `${currentAccount.isDemo ? '🧪' : '💰'} ${currentAccount.accountId}`;
-
-        // Subscribe to market data and balance
-        subscribeToAll();
-        ws.send(JSON.stringify({ balance: '1', subscribe: '1' }));
-    };
-
-    ws.onclose = (e) => {
-        setWsStatus('stopped', 'Disconnected');
-        if (!intentionalClose) {
-            writeLog('#ef4444', `⚡ WS closed (${e.code}). Reconnecting in 5s…`);
-            wsReconnectTimer = setTimeout(async () => {
-                try { await connectWebSocket(); } catch(err) {
-                    writeLog('#ef4444', `Reconnect failed: ${err.message}`);
-                }
-            }, 5000);
-        }
-    };
-
-    ws.onerror = () => {
-        setWsStatus('stopped', 'WS error');
-        writeLog('#ef4444', '⛔ WS error.');
-    };
-
-    ws.onmessage = (msg) => {
-        let data;
-        try { data = JSON.parse(msg.data); } catch(e) { return; }
-        if (data.error) { writeLog('#ef4444', 'API Error: ' + data.error.message); return; }
-        handleWsMessage(data);
-    };
+function enableTradePanel() {
+  document.getElementById('buy-btn').disabled = !state.proposal;
 }
 
-async function reconnectWS() {
-    if (!accessToken || !currentAccount) {
-        writeLog('#f59e0b', '⚠ Not logged in. Please log in first.');
-        document.getElementById('loginOverlay').style.display = 'flex';
-        return;
-    }
-    intentionalClose = false;
-    if (ws) { ws.close(); ws = null; }
-    try {
-        await connectWebSocket();
-    } catch (e) {
-        writeLog('#ef4444', `Reconnect error: ${e.message}`);
-    }
+function disableTradePanel() {
+  document.getElementById('buy-btn').disabled = true;
 }
 
-function subscribeToAll() {
-    writeLog('#94a3b8', 'Subscribing to 13 indices…');
-    symbols.forEach(sym => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                subscribe:         1,
-                ticks_history:     sym,
-                adjust_start_time: 1,
-                count:             getSampleSize(),
-                end:               'latest',
-                start:             1,
-                style:             'ticks',
-                passthrough:       { ahai: theAppID }
-            }));
-        }
-    });
+let toastTimer;
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
 }
 
-// ═══════════════════════════════════════════════════════════
-//  WS MESSAGE HANDLER
-// ═══════════════════════════════════════════════════════════
-function handleWsMessage(data) {
-    if (data.msg_type === 'balance') {
-        document.getElementById('lblBalance').textContent =
-            '$ ' + parseFloat(data.balance.balance).toFixed(2);
-    }
-    else if (data.msg_type === 'history') {
-        let sym = data.echo_req.ticks_history;
-        if (symbols.includes(sym) && data.history && data.history.prices)
-            rebuildFromHistory(sym, data.history.prices.map(Number), data.pip_size);
-    }
-    else if (data.msg_type === 'tick') {
-        let sym = data.tick.symbol;
-        if (symbols.includes(sym))
-            processTickFollow(sym, parseFloat(data.tick.quote), data.tick.pip_size);
-    }
-    else if (data.msg_type === 'buy') {
-        let tempId  = data.echo_req?.passthrough?.tempId;
-        let realId  = data.buy?.contract_id;
-        if (tempId && realId) registerContractId(tempId, realId);
-        writeLog('#60a5fa', `📄 Contract ID: ${realId}`);
-    }
-    else if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-        let poc    = data.proposal_open_contract;
-        let profit = poc.profit;
-        let cid    = poc.contract_id;
-
-        total_profit += profit;
-        if (total_profit > max_profit) max_profit = total_profit;
-        let sessionDD = max_profit - total_profit;
-        if (sessionDD > max_drawdown) max_drawdown = sessionDD;
-
-        document.getElementById('lblProfit').textContent     = '$ ' + total_profit.toFixed(2);
-        document.getElementById('lblProfit').style.color     = total_profit < 0 ? '#ef4444' : '#10b981';
-        document.getElementById('lblMaxDrawdown').textContent = '$ ' + max_drawdown.toFixed(2);
-
-        let meta     = contractMeta[cid] || {};
-        let mSym     = meta.symbol       || '?';
-        let mCT      = meta.contractType || '?';
-        let mStake   = meta.stake        || baseStakeValue;
-        let mBarrier = meta.barrier      || '?';
-        let mTime    = meta.openedAt     || '';
-        let predicted    = meta.predicted    || null;
-        let resolvedRow  = meta.resolvedRow  || false;
-        delete contractMeta[cid];
-
-        let actualResult = poc.status === 'won' ? 'WIN' : 'LOSS';
-        let tag = predicted
-            ? (predicted === actualResult ? ' ✔ confirmed' : ' ⚠ MISPREDICTED')
-            : ' (no prediction)';
-        let logColor = poc.status === 'won' ? '#10b981' : '#ef4444';
-        let logIcon  = poc.status === 'won' ? '✅' : '❌';
-        writeLog(logColor,
-            `${logIcon} SETTLED ${actualResult} ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} | ${mCT} barrier=${mBarrier} | ${displayNames[mSym]||mSym}${tag}`);
-
-        let mRowId = meta.rowId || null;
-        if (resolvedRow && mRowId) {
-            updateHistoryRow(mRowId, profit, actualResult);
-            if (predicted !== actualResult) {
-                if (predicted === 'WIN') { wins--; loss++; onLossAppend(mStake); prepareNextStake(); }
-                else { loss--; wins++; let idx=allLoses.lastIndexOf(mStake); if(idx!==-1)allLoses.splice(idx,1); onWinRemoveLoses(mStake); prepareNextStake(); }
-                document.getElementById('lblWins').textContent   = wins;
-                document.getElementById('lblLosses').textContent = loss;
-                writeLog('#f59e0b', `⚠ MISPREDICTION CORRECTED | predicted=${predicted} actual=${actualResult}`);
-            }
-        } else if (!resolvedRow) {
-            let mDigit = meta.triggerDigit !== undefined ? meta.triggerDigit : '?';
-            addHistoryRow(mSym, mCT, mStake, mTime, mDigit, mBarrier,
-                poc.status === 'won' ? 'WON' : 'LOST', profit);
-            if (poc.status === 'won') { wins++; onWinRemoveLoses(mStake); }
-            else                     { loss++; onLossAppend(mStake); }
-            prepareNextStake();
-            document.getElementById('lblWins').textContent   = wins;
-            document.getElementById('lblLosses').textContent = loss;
-        }
-
-        let tp = parseFloat(document.getElementById('txtTPmdl').value);
-        let sl = parseFloat(document.getElementById('txtSLmdl').value);
-        if (auto_trade && total_profit >= tp)
-            stopAutoTrade('🎯 Target Profit reached');
-        else if (auto_trade && total_profit < 0 && Math.abs(total_profit) >= sl)
-            stopAutoTrade('⛔ Stop Loss triggered');
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  LOGOUT
-// ═══════════════════════════════════════════════════════════
 function logout() {
-    if (!confirm('Log out and disconnect?')) return;
-    intentionalClose = true;
-    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
-    if (ws) { ws.close(); ws = null; }
-    accessToken    = null;
-    currentAccount = null;
-    auto_trade     = false;
-    document.getElementById('userBadge').style.display = 'none';
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('accountSelector').style.display = 'none';
-    document.getElementById('loginButtons').style.display = 'flex';
-    document.getElementById('acctList').innerHTML = '';
-    setLoginStatus('Logged out', '');
-    setWsStatus('stopped', 'Disconnected');
-    writeLog('#94a3b8', '👋 Logged out.');
+  sessionStorage.removeItem('deriv_access_token');
+  sessionStorage.removeItem('deriv_token_expiry');
+  if (state.ws) state.ws.close();
+  window.location.reload();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════════════════════
-function setLoginStatus(msg, state) {
-    document.getElementById('loginStatusText').textContent = msg;
-    const dot = document.getElementById('wsStatusDot');
-    dot.className = '';
-    if (state === 'ok') dot.className = 'ok';
-    if (state === 'connecting') dot.className = 'connecting';
-}
-function setWsStatus(state, msg) {
-    const dot  = document.getElementById('wsStatusDot2');
-    const text = document.getElementById('wsStatusText');
-    dot.className = 'status-dot';
-    if (state === 'ok')          dot.classList.add('dot-live');
-    else if (state === 'connecting') dot.classList.add('dot-running');
-    else                         dot.classList.add('dot-stopped');
-    text.textContent = 'WebSocket: ' + msg;
-}
-function showLoginError(msg) {
-    const el = document.getElementById('loginError');
-    el.textContent = msg;
-    el.style.display = 'block';
-    setLoginStatus('Error', '');
-}
+// ═══════════════════════════════════════════════
+// BOOTSTRAP
+// ═══════════════════════════════════════════════
+(async function() {
+  // Check for OAuth callback
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('code')) {
+    await handleCallback();
+    return;
+  }
 
-// ═══════════════════════════════════════════════════════════
-//  PATTERN CONFIGURATOR
-// ═══════════════════════════════════════════════════════════
-function isPatternEnabled(pat) { return pat.some(v => v !== '*'); }
+  // Check for error callback
+  if (urlParams.has('error')) {
+    showToast(urlParams.get('error_description') || urlParams.get('error'), 'error');
+    return;
+  }
 
-function buildPatternRow(containerId, idxContainerId, patArray, side) {
-    let row    = document.getElementById(containerId);
-    let idxRow = document.getElementById(idxContainerId);
-    if (!row || !idxRow) return;
-    for (let i = 0; i < PATTERN_LEN; i++) {
-        let sel = document.createElement('select');
-        sel.className    = 'pat-slot';
-        sel.dataset.side = side;
-        sel.dataset.idx  = i;
-        sel.dataset.val  = patArray[i];
-        [['*','·'],['E','E'],['O','O']].forEach(([v, label]) => {
-            let opt = document.createElement('option');
-            opt.value = v; opt.textContent = label;
-            if (patArray[i] === v) opt.selected = true;
-            sel.appendChild(opt);
-        });
-        sel.addEventListener('change', function() {
-            let idx = parseInt(this.dataset.idx);
-            let val = this.value;
-            this.dataset.val = val;
-            if (side === 'odd')  patternOdd[idx]  = val;
-            else                 patternEven[idx] = val;
-            updatePatternStatus(side);
-            updateLegend();
-        });
-        row.appendChild(sel);
-        let idxLbl = document.createElement('span');
-        idxLbl.className = 'pat-slot-idx';
-        idxLbl.textContent = i + 1;
-        idxRow.appendChild(idxLbl);
-    }
-    updatePatternStatus(side);
-}
+  // Check for stored token
+  const storedToken  = sessionStorage.getItem('deriv_access_token');
+  const tokenExpiry  = sessionStorage.getItem('deriv_token_expiry');
+  if (storedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
+    state.accessToken = storedToken;
+    await initApp();
+    return;
+  }
 
-function updatePatternStatus(side) {
-    let pat  = side === 'odd' ? patternOdd : patternEven;
-    let elId = side === 'odd' ? 'patStatusOdd' : 'patStatusEven';
-    let el   = document.getElementById(elId);
-    if (!el) return;
-    let enabled = isPatternEnabled(pat);
-    el.textContent = enabled ? 'ACTIVE' : 'DISABLED';
-    el.className   = 'pat-status ' + (enabled ? 'pat-status-on' : 'pat-status-off');
-}
-
-function updateLegend() {
-    function patStr(pat) {
-        if (!isPatternEnabled(pat)) return '<span style="color:var(--txt2);">DISABLED</span>';
-        return pat.map(v => {
-            if (v === '*') return `<span style="color:var(--txt2);">·</span>`;
-            if (v === 'E') return `<span style="color:var(--over);font-weight:700;">E</span>`;
-            return `<span style="color:var(--under);font-weight:700;">O</span>`;
-        }).join('<span style="color:var(--border2);">,</span>');
-    }
-    let lo = document.getElementById('legendPatOdd');
-    let le = document.getElementById('legendPatEven');
-    if (lo) lo.innerHTML = 'DIGITODD: ' + patStr(patternOdd);
-    if (le) le.innerHTML = 'DIGITEVEN: ' + patStr(patternEven);
-}
-
-// ═══════════════════════════════════════════════════════════
-//  GETTERS & HELPERS
-// ═══════════════════════════════════════════════════════════
-function getSampleSize()       { return Math.max(50, parseInt(document.getElementById('txtSample').value) || 1000); }
-function getMartingaleFactor() { let v = parseFloat(document.getElementById('txtMartingaleFactorUI').value); return (!isNaN(v) && v > 0) ? v : 1.2; }
-function pipToExp(pip) {
-    if (!pip || pip <= 0) return 2;
-    if (pip >= 1) return Math.round(pip);
-    return Math.round(-Math.log10(pip));
-}
-function getLastDigit(price, pip) {
-    let exp = pipToExp(pip);
-    return Math.round(Math.round(price * Math.pow(10, exp)) % 10);
-}
-
-// ═══════════════════════════════════════════════════════════
-//  LOGGING
-// ═══════════════════════════════════════════════════════════
-function writeLog(color, msg) {
-    let logDiv = document.getElementById('log');
-    if (!logDiv) return;
-    let ts = new Date().toLocaleTimeString();
-    while (activityCount >= 300 && logDiv.lastChild) { logDiv.removeChild(logDiv.lastChild); activityCount--; }
-    let entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.style.color = color;
-    entry.innerHTML = `<span class="log-ts">[${ts}]</span>${msg}`;
-    logDiv.insertBefore(entry, logDiv.firstChild);
-    activityCount++;
-}
-function copyLog() {
-    let lines = [];
-    document.getElementById('log').querySelectorAll('.log-entry').forEach(el => lines.push(el.innerText || el.textContent));
-    navigator.clipboard.writeText(lines.join('\n')).then(() => writeLog('#60a5fa', '📋 Log copied.'));
-}
-function clearLog() { document.getElementById('log').innerHTML = ''; activityCount = 0; }
-
-// ═══════════════════════════════════════════════════════════
-//  HISTORY
-// ═══════════════════════════════════════════════════════════
-function copyHistory() {
-    let tbody = document.getElementById('historyBody');
-    let csv   = ['Symbol,Type,Stake,Time,Digit,Barrier,Result,P/L'];
-    tbody.querySelectorAll('tr').forEach(tr => {
-        let row = Array.from(tr.querySelectorAll('td')).map(td => `"${(td.innerText||td.textContent).replace(/"/g,'""')}"`);
-        csv.push(row.join(','));
-    });
-    navigator.clipboard.writeText(csv.join('\n')).then(() => writeLog('#60a5fa', '📋 History copied as CSV.'));
-}
-function clearHistory() { document.getElementById('historyBody').innerHTML = ''; historyCount = 0; }
-
-function addHistoryRow(symbol, contractType, stake, timeStr, triggerDigit, barrier, result, pl, rowId, isSim) {
-    let tbody = document.getElementById('historyBody');
-    if (!tbody) return;
-    while (historyCount >= 300 && tbody.lastChild) { tbody.removeChild(tbody.lastChild); historyCount--; }
-    let plDisplay = (pl !== null && pl !== undefined)
-        ? `${pl >= 0 ? '+' : ''}${parseFloat(pl).toFixed(2)}`
-        : '…';
-    let plClass = (pl !== null && pl !== undefined) ? (pl >= 0 ? 'ht-pos' : 'ht-neg') : '';
-    let tr = document.createElement('tr');
-    if (isSim) tr.classList.add('sim-row');
-    tr.dataset.contractType = contractType;
-    tr.dataset.symbol       = symbol;
-    tr.dataset.openedAt     = timeStr;
-    tr.innerHTML = `
-        <td class="ht-sym">${displayNames[symbol]||symbol}${isSim ? ' <span class="ht-sim">[SIM]</span>' : ''}</td>
-        <td style="color:#60a5fa;">${contractType}</td>
-        <td>$${stakeStr(parseFloat(stake))}</td>
-        <td style="font-size:0.5rem;">${timeStr}</td>
-        <td style="font-size:0.48rem;">${triggerDigit||'—'}</td>
-        <td>${barrier !== null && barrier !== undefined ? barrier : '—'}</td>
-        <td class="${result==='WON'?'ht-win':'ht-loss'}">${result==='WON'?'✅ WIN':'❌ LOSS'}</td>
-        <td class="${plClass}" data-pl="pending">${plDisplay}</td>
-    `;
-    if (rowId) tr.dataset.rowId = rowId;
-    tbody.insertBefore(tr, tbody.firstChild);
-    historyCount++;
-}
-
-function updateHistoryRow(rowId, pl, actualResult) {
-    let tbody = document.getElementById('historyBody');
-    if (!tbody) return;
-    let tr = tbody.querySelector(`[data-row-id="${rowId}"]`);
-    if (!tr) return;
-    let plCell = tr.querySelector('[data-pl="pending"]');
-    if (plCell) {
-        plCell.textContent = `${pl >= 0 ? '+' : ''}${parseFloat(pl).toFixed(2)}`;
-        plCell.className   = pl >= 0 ? 'ht-pos' : 'ht-neg';
-        plCell.removeAttribute('data-pl');
-    }
-    let resultCell = tr.querySelector('td:nth-child(7)');
-    if (resultCell) {
-        let correct      = actualResult === 'WIN' ? '✅ WIN' : '❌ LOSS';
-        let correctClass = actualResult === 'WIN' ? 'ht-win' : 'ht-loss';
-        if (resultCell.textContent.trim() !== correct) {
-            resultCell.textContent = correct;
-            resultCell.className   = correctClass;
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  DIGIT HISTORY
-// ═══════════════════════════════════════════════════════════
-function recomputeDigitHistory(sym) {
-    let sampleSize = getSampleSize();
-    let prices     = arrLDData[sym] || [];
-    if (prices.length > sampleSize) prices = prices.slice(-sampleSize);
-    arrLDData[sym] = prices.slice();
-    let pip  = pipSize[sym];
-    let tail = prices.slice(-PATTERN_LEN);
-    digitHistory[sym] = tail.map(p => getLastDigit(p, pip));
-    updatePatternUI(sym);
-}
-
-function getPatternMatch(sym) {
-    let h = digitHistory[sym] || [];
-    if (h.length < PATTERN_LEN) return null;
-    let last10 = h.slice(-PATTERN_LEN);
-    let oddEnabled  = isPatternEnabled(patternOdd);
-    let evenEnabled = isPatternEnabled(patternEven);
-    let matchOdd  = oddEnabled  && last10.every((digit, i) => {
-        let slot = patternOdd[i];
-        if (slot === '*') return true;
-        return (digit % 2 === 0 ? 'E' : 'O') === slot;
-    });
-    let matchEven = evenEnabled && last10.every((digit, i) => {
-        let slot = patternEven[i];
-        if (slot === '*') return true;
-        return (digit % 2 === 0 ? 'E' : 'O') === slot;
-    });
-    if (matchOdd)  return 'odd';
-    if (matchEven) return 'even';
-    return null;
-}
-
-function updateLastTickUI(sym, price, pip) {
-    let tickDiv = document.getElementById(`${sym}_Tick`);
-    if (!tickDiv) return;
-    let digit     = getLastDigit(price, pip);
-    let formatted = price.toFixed(pip);
-    let mainPart  = formatted.substring(0, formatted.length - 1);
-    tickDiv.innerHTML = `${mainPart}<span class="last-digit-big">${digit}</span>`;
-}
-
-function updatePatternUI(sym) {
-    let hist   = digitHistory[sym] || [];
-    let cellL4 = document.getElementById(`${sym}_Last4`);
-    if (cellL4) {
-        if (hist.length < PATTERN_LEN) { cellL4.textContent = '…'; }
-        else {
-            cellL4.innerHTML = hist.slice(-PATTERN_LEN).map((d, i) => {
-                let isEven = d % 2 === 0;
-                let col    = isEven ? 'var(--over)' : 'var(--under)';
-                let dim    = (patternOdd[i] === '*' && patternEven[i] === '*');
-                return `<span style="color:${col};font-weight:700;opacity:${dim?0.45:1};">${d}</span>`;
-            }).join(' ');
-        }
-    }
-    let cellPat = document.getElementById(`${sym}_Pattern`);
-    if (cellPat) {
-        let pat = getPatternMatch(sym);
-        if (pat === 'odd')  { cellPat.textContent = '→ ODD';  cellPat.style.color = 'var(--under)'; cellPat.style.fontWeight = '700'; }
-        else if (pat === 'even') { cellPat.textContent = '→ EVEN'; cellPat.style.color = 'var(--over)'; cellPat.style.fontWeight = '700'; }
-        else { cellPat.textContent = '—'; cellPat.style.color = 'var(--txt2)'; cellPat.style.fontWeight = '400'; }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  TRIGGER EVALUATION
-// ═══════════════════════════════════════════════════════════
-function evaluateTrigger(sym) {
-    if (!auto_trade) return;
-    if (!tickBuySent[sym]) tickBuySent[sym] = { odd: false, even: false };
-    let pat = getPatternMatch(sym);
-    if (!pat) return;
-    if (pat === 'odd' && !tickBuySent[sym].odd) {
-        let h = (digitHistory[sym] || []).slice(-PATTERN_LEN).join(',');
-        writeLog('#fdba74', `🔵 ODD trigger | ${displayNames[sym]||sym} | last10=[${h}] → DIGITODD`);
-        buyContract(sym, 'DIGITODD', null, h);
-    }
-    if (pat === 'even' && !tickBuySent[sym].even) {
-        let h = (digitHistory[sym] || []).slice(-PATTERN_LEN).join(',');
-        writeLog('#86efac', `🟠 EVEN trigger | ${displayNames[sym]||sym} | last10=[${h}] → DIGITEVEN`);
-        buyContract(sym, 'DIGITEVEN', null, h);
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SIM MODE
-// ═══════════════════════════════════════════════════════════
-function getSimThreshold() {
-    let v = parseFloat(document.getElementById('txtSimThreshold').value);
-    return (!isNaN(v) && v >= 0) ? v : 0.35;
-}
-function applyAutoSimMode(stake) {
-    let threshold = getSimThreshold();
-    let shouldSim = stake < threshold;
-    if (shouldSim === simMode) return;
-    simMode = shouldSim;
-    let btn = document.getElementById('btnSimToggle');
-    if (simMode) {
-        btn.innerHTML = '<i class="fa-solid fa-flask"></i> Sim';
-        btn.className = 'btn btn-sim-on';
-        if (auto_trade) setStatus('<span class="status-dot" style="background:var(--warning);box-shadow:0 0 5px var(--warning);"></span>Sim Mode', '#f59e0b');
-        writeLog('#fcd34d', `🧪 AUTO → SIM MODE | stake=$${stakeStr(stake)} < $${stakeStr(threshold)}`);
-    } else {
-        btn.innerHTML = '<i class="fa-solid fa-flask"></i> Live';
-        btn.className = 'btn btn-sim-off';
-        if (auto_trade) setStatus('<span class="status-dot dot-running"></span>Running', '#f59e0b');
-        writeLog('#94a3b8', `🔴 AUTO → LIVE MODE | stake=$${stakeStr(stake)} ≥ $${stakeStr(threshold)}`);
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  CONTRACT EXECUTION
-// ═══════════════════════════════════════════════════════════
-function buyContract(symbol, contractType, barrierValue, triggerPattern) {
-    if (!auto_trade) return;
-    let guardKey = contractType === 'DIGITODD' ? 'odd' : 'even';
-    if (!tickBuySent[symbol]) tickBuySent[symbol] = { odd: false, even: false };
-    if (tickBuySent[symbol][guardKey]) return;
-    tickBuySent[symbol][guardKey] = true;
-
-    let finalStake = (globalNextStake !== null) ? globalNextStake : computeNextStake();
-    document.getElementById('lblStake').textContent = stakeStr(finalStake);
-
-    let tempId   = 'tmp_' + (++tempIdCounter);
-    let openedAt = new Date().toLocaleString();
-    contractMeta[tempId] = {
-        symbol:       symbol, contractType, dir: guardKey,
-        stake:        finalStake, triggerDigit: triggerPattern,
-        barrier:      null, openedAt
-    };
-    if (!pendingContracts[symbol]) pendingContracts[symbol] = [];
-    pendingContracts[symbol].push({
-        type: contractType, dir: guardKey, barrier: null,
-        stake: finalStake, triggerDigit: triggerPattern,
-        openedAt, tempId, rowId: tempId
-    });
-
-    applyAutoSimMode(finalStake);
-
-    let losesTotal = allLoses.reduce((a, v) => a + v, 0);
-    if (simMode) {
-        let pEntry = pendingContracts[symbol][pendingContracts[symbol].length - 1];
-        if (pEntry && pEntry.tempId === tempId) { pEntry.confirmed = true; pEntry.sim = true; }
-        writeLog('#fcd34d', `🧪 [SIM] ${contractType} | ${displayNames[symbol]||symbol} | stake=$${stakeStr(finalStake)}`);
-    } else {
-        writeLog('#FFFFFF', `🚀 ${contractType} | ${displayNames[symbol]||symbol} | stake=$${stakeStr(finalStake)} | mf×${getMartingaleFactor()}`);
-        ws.send(JSON.stringify({
-            subscribe:  1,
-            buy:        1,
-            parameters: {
-                amount:                stakeStr(finalStake),
-                app_markup_percentage: '1',
-                basis:                 'stake',
-                contract_type:         contractType,
-                currency:              currentAccount?.currency || 'USD',
-                duration:              parseInt(document.getElementById('selDur').value),
-                duration_unit:         't',
-                symbol
-            },
-            price:      stakeStr(finalStake),
-            passthrough:{ ahai: theAppID, tempId }
-        }));
-    }
-}
-
-function stakeStr(v) {
-    if (v === 0) return '0.00';
-    let abs = Math.abs(v);
-    if (abs >= 0.01) return v.toFixed(2);
-    let dp = Math.max(2, Math.ceil(-Math.log10(abs)) + 2);
-    dp = Math.min(dp, 8);
-    let s = v.toFixed(dp).replace(/(\.\d*?[1-9])0+$/, '$1');
-    if (!/\./.test(s)) s += '.00';
-    else if (/\.\d$/.test(s)) s += '0';
-    return s;
-}
-
-function computeNextStake() {
-    let mFactor  = getMartingaleFactor();
-    let top5sum  = allLoses.slice(0, 5).reduce((a, v) => a + v, 0);
-    let computed = parseFloat((top5sum * mFactor).toPrecision(8));
-    return computed < baseStakeValue ? baseStakeValue : computed;
-}
-function onWinRemoveLoses(winStake) {
-    let budget = winStake * 0.92, cumSum = 0, removeCount = 0;
-    for (let i = 0; i < allLoses.length; i++) {
-        if (cumSum + allLoses[i] <= budget) { cumSum += allLoses[i]; removeCount++; } else break;
-    }
-    if (removeCount > 0) { allLoses.splice(0, removeCount); writeLog('#86efac', `💰 WIN: removed ${removeCount} loss(es) | allLoses.length=${allLoses.length}`); }
-}
-function onLossAppend(stakeAmount) {
-    allLoses.push(stakeAmount);
-    writeLog('#fca5a5', `📉 LOSS: $${stakeStr(stakeAmount)} | length=${allLoses.length}`);
-}
-function prepareNextStake() {
-    allLoses.sort((a, b) => a - b);
-    globalNextStake = computeNextStake();
-    let total = allLoses.reduce((a, v) => a + v, 0);
-    let el = document.getElementById('lblDrawdownVal');
-    if (el) el.textContent = '$ ' + stakeStr(total);
-}
-
-function registerContractId(tempId, realId) {
-    if (contractMeta[tempId]) { contractMeta[realId] = contractMeta[tempId]; contractMeta[realId].realId = realId; delete contractMeta[tempId]; }
-    contractConfirmed.add(tempId);
-    for (let sym of symbols) {
-        if (!pendingContracts[sym]) continue;
-        for (let p of pendingContracts[sym]) {
-            if (p.tempId === tempId) { p.confirmed = true; break; }
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  TICK PROCESSING
-// ═══════════════════════════════════════════════════════════
-function resolvePendingContracts(sym, settlementDigit) {
-    if (!pendingContracts[sym] || pendingContracts[sym].length === 0) return;
-    let toResolve = [], toKeep = [];
-    pendingContracts[sym].forEach(p => { if (p.confirmed) toResolve.push(p); else toKeep.push(p); });
-    pendingContracts[sym] = toKeep;
-    if (toResolve.length === 0) return;
-
-    let outcomes = toResolve.map(p => {
-        let dir       = p.dir || (p.type === 'DIGITODD' ? 'odd' : 'even');
-        let predicted = (p.type === 'DIGITODD')
-            ? (settlementDigit % 2 !== 0 ? 'WIN' : 'LOSS')
-            : (settlementDigit % 2 === 0 ? 'WIN' : 'LOSS');
-        return { p, dir, predicted };
-    });
-
-    let lossCount = 0;
-    outcomes.forEach(({ p, predicted }) => {
-        if (predicted === 'LOSS') { loss++; lossCount++; allLoses.push(p.stake); }
-    });
-    if (lossCount > 0) writeLog('#fca5a5', `📉 LOSS batch (${lossCount}): total=$${stakeStr(allLoses.reduce((a,v)=>a+v,0))}`);
-
-    allLoses.sort((a, b) => a - b);
-
-    outcomes.forEach(({ p, predicted }) => {
-        if (predicted === 'WIN') { wins++; onWinRemoveLoses(p.stake); }
-    });
-
-    prepareNextStake();
-    document.getElementById('lblWins').textContent   = wins;
-    document.getElementById('lblLosses').textContent = loss;
-
-    outcomes.forEach(({ p, dir, predicted }) => {
-        let icon   = predicted === 'WIN' ? '🟢' : '🔴';
-        let color  = predicted === 'WIN' ? '#86efac' : '#fca5a5';
-        let simTag = p.sim ? ' [SIM]' : '';
-        writeLog(color, `${icon}${simTag} PREDICT ${predicted} | ${p.type} | ${displayNames[sym]||sym} | settle=${settlementDigit}(${settlementDigit%2===0?'E':'O'}) | stake=$${stakeStr(p.stake)} | next=$${stakeStr(globalNextStake)}`);
-        addHistoryRow(sym, p.type, p.stake, p.openedAt, p.triggerDigit, settlementDigit, predicted === 'WIN' ? 'WON' : 'LOST', null, p.rowId, p.sim);
-        for (let cid in contractMeta) {
-            let m = contractMeta[cid];
-            if (m && m.symbol === sym && m.triggerDigit === p.triggerDigit && m.contractType === p.type && m.openedAt === p.openedAt) {
-                m.predicted = predicted; m.resolvedRow = true; m.rowId = p.rowId; m.sim = p.sim||false; m.dir = dir; break;
-            }
-        }
-    });
-}
-
-function processTickFollow(sym, quote, rawPip) {
-    let pip             = pipToExp(rawPip);
-    let settlementDigit = Math.round(Math.round(quote * Math.pow(10, pip)) % 10);
-    resolvePendingContracts(sym, settlementDigit);
-    if (!tickBuySent[sym]) tickBuySent[sym] = { odd: false, even: false };
-    tickBuySent[sym].odd  = false;
-    tickBuySent[sym].even = false;
-    if (!arrLDData[sym]) arrLDData[sym] = [];
-    arrLDData[sym].push(quote);
-    let sampleSize = getSampleSize();
-    if (arrLDData[sym].length > sampleSize) arrLDData[sym] = arrLDData[sym].slice(-sampleSize);
-    pipSize[sym] = pip;
-    recomputeDigitHistory(sym);
-    updateLastTickUI(sym, quote, pip);
-    evaluateTrigger(sym);
-}
-
-function rebuildFromHistory(sym, prices, pip) {
-    let exp        = pipToExp(pip);
-    let sampleSize = getSampleSize();
-    let limited    = prices.slice(-sampleSize);
-    arrLDData[sym] = limited.slice();
-    pipSize[sym]   = exp;
-    recomputeDigitHistory(sym);
-    if (limited.length) updateLastTickUI(sym, limited[limited.length - 1], exp);
-}
-
-function onSampleSizeChanged() {
-    let newSize = getSampleSize();
-    symbols.forEach(sym => {
-        if (arrLDData[sym] && arrLDData[sym].length > 0) {
-            arrLDData[sym] = arrLDData[sym].slice(-newSize);
-            recomputeDigitHistory(sym);
-            if (arrLDData[sym].length) updateLastTickUI(sym, arrLDData[sym][arrLDData[sym].length-1], pipSize[sym]);
-        }
-    });
-    writeLog('#94a3b8', `📊 Sample size → ${newSize} ticks.`);
-}
-
-// ═══════════════════════════════════════════════════════════
-//  BOT CONTROL
-// ═══════════════════════════════════════════════════════════
-function setStatus(html, color) {
-    let el = document.getElementById('lblStatus');
-    if (el) { el.innerHTML = html; el.style.color = color || ''; }
-}
-function stopAutoTrade(reason) {
-    auto_trade = false;
-    document.getElementById('btnAutoTrade').innerHTML = '<i class="fa-solid fa-play"></i> Start';
-    document.getElementById('btnAutoTrade').className = 'btn btn-start';
-    setStatus('<span class="status-dot dot-stopped"></span>Stopped', '#ef4444');
-    if (reason) { alert(reason); writeLog('#ef4444', reason); }
-}
-function pauseAutoTrade() {
-    if (!auto_trade) return;
-    auto_trade = false;
-    document.getElementById('btnAutoTrade').innerHTML = '<i class="fa-solid fa-play"></i> Start';
-    document.getElementById('btnAutoTrade').className = 'btn btn-start';
-    setStatus('<span class="status-dot dot-paused"></span>Paused', '#f59e0b');
-    writeLog('#f59e0b', '⏸ Auto-trade paused.');
-}
-function StartAutoTrade() {
-    if (!auto_trade) { $('#ex1').modal('show'); } else { pauseAutoTrade(); }
-}
-function AutoTrade() {
-    let initialStake = parseFloat(document.getElementById('txtStakemdl').value);
-    if (isNaN(initialStake) || initialStake <= 0) initialStake = 1.0;
-    baseStakeValue = initialStake;
-    document.getElementById('lblStake').textContent = stakeStr(initialStake);
-    total_profit = 0; max_profit = 0; max_drawdown = 0; wins = 0; loss = 0;
-    allLoses = []; globalNextStake = null;
-    symbols.forEach(sym => { digitHistory[sym] = []; tickBuySent[sym] = { odd: false, even: false }; updatePatternUI(sym); });
-    document.getElementById('lblWins').textContent      = 0;
-    document.getElementById('lblLosses').textContent    = 0;
-    document.getElementById('lblProfit').textContent    = '$ 0.00';
-    document.getElementById('lblProfit').style.color    = '#10b981';
-    document.getElementById('lblMaxDrawdown').textContent = '$ 0.00';
-    auto_trade = true;
-    document.getElementById('btnAutoTrade').innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
-    document.getElementById('btnAutoTrade').className = 'btn btn-pause';
-    setStatus('<span class="status-dot dot-running"></span>Running', '#f59e0b');
-    let tp = parseFloat(document.getElementById('txtTPmdl').value);
-    let sl = parseFloat(document.getElementById('txtSLmdl').value);
-    writeLog('#10b981', `🤖 AUTO-TRADE ON${simMode ? ' [SIM]' : ''} | TP:$${tp} SL:$${sl} | stake:$${stakeStr(initialStake)}`);
-    return false;
-}
-function ezStopBot() {
-    intentionalClose = true;
-    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
-    if (ws) ws.close();
-    auto_trade = false;
-    document.getElementById('btnAutoTrade').innerHTML = '<i class="fa-solid fa-play"></i> Start';
-    document.getElementById('btnAutoTrade').className = 'btn btn-start';
-    setStatus('<span class="status-dot dot-stopped"></span>Stopped', '#ef4444');
-    writeLog('#FFFFFF', '🛑 EMERGENCY STOP.');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  MARKET TABLE
-// ═══════════════════════════════════════════════════════════
-function buildMarketTable() {
-    let tbody = document.getElementById('market-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    symbols.forEach(sym => {
-        let row   = tbody.insertRow();
-        let cell0 = row.insertCell(0);
-        cell0.className  = 'symbol-label col-market';
-        cell0.title      = displayNames[sym];
-        cell0.textContent = displayNames[sym];
-
-        let cellTick = row.insertCell();
-        cellTick.className = 'col-tick';
-        let divTick = document.createElement('div');
-        divTick.className = 'last-tick-cell';
-        divTick.id        = `${sym}_Tick`;
-        divTick.innerText = '—';
-        cellTick.appendChild(divTick);
-
-        let cellL4 = row.insertCell();
-        cellL4.className = 'col-last4';
-        let divL4 = document.createElement('div');
-        divL4.className  = 'last4-cell';
-        divL4.id         = `${sym}_Last4`;
-        divL4.textContent = '…';
-        cellL4.appendChild(divL4);
-
-        let cellPat = row.insertCell();
-        cellPat.className = 'col-pattern';
-        let divPat = document.createElement('div');
-        divPat.className  = 'pattern-cell';
-        divPat.id         = `${sym}_Pattern`;
-        divPat.textContent = '—';
-        cellPat.appendChild(divPat);
-    });
-}
-
-// ═══════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════
-document.getElementById('txtSample').addEventListener('change', onSampleSizeChanged);
-buildMarketTable();
-buildPatternRow('patRowOdd',  'patIdxOdd',  patternOdd,  'odd');
-buildPatternRow('patRowEven', 'patIdxEven', patternEven, 'even');
-updateLegend();
-
-// Handle OAuth callback on page load
-window.addEventListener('load', () => {
-    handleOAuthCallback();
-});
-
-writeLog('#FFFFFF', '✅ DigitPad Pro ready · Click "Log In with Deriv" to authenticate via OAuth 2.0');
+  // Show login
+  document.getElementById('login-screen').style.display = 'flex';
+})();
 </script>
 </body>
 </html>
