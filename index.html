@@ -1092,25 +1092,34 @@ function clearProposal() {
 // BUY / TRADE
 // ═══════════════════════════════════════════════
 function placeTrade(action) {
-  if (!state.proposal) { showToast('No proposal available.', 'error'); return; }
+  if (!state.proposal || !state.proposalId) { showToast('No proposal available.', 'error'); return; }
 
   const buyBtn = document.getElementById('buy-btn');
   buyBtn.innerHTML = '<span class="spinner"></span>';
   buyBtn.disabled = true;
 
+  // Deriv WS buy requires the proposal ID and the ask_price from the proposal
+  // Using the stake input value instead of ask_price causes a Bad Request error
+  const askPrice = parseFloat(state.proposal.ask_price || state.proposal.display_value || document.getElementById('stake-input').value) || 0.35;
+
   wsSend({
-    buy: state.proposal.id,
-    price: parseFloat(document.getElementById('stake-input').value) || 0.35,
+    buy: state.proposalId,
+    price: askPrice,
   });
 }
 
 function handleBuyResponse(buy) {
   const buyBtn = document.getElementById('buy-btn');
   buyBtn.innerHTML = '<span id="buy-label">Buy</span>';
-  buyBtn.disabled = false;
 
   if (buy.error) {
+    buyBtn.disabled = false;
     showToast(`Trade failed: ${buy.error.message}`, 'error');
+    // Proposal is consumed/stale after a buy attempt — request a fresh one
+    state.proposal = null;
+    state.proposalId = null;
+    buyBtn.disabled = true;
+    setTimeout(requestProposal, 300);
     return;
   }
 
@@ -1118,6 +1127,11 @@ function handleBuyResponse(buy) {
   document.getElementById('stat-trades').textContent = state.sessionStats.trades;
 
   showToast(`✅ Contract #${buy.contract_id || buy.id} purchased!`, 'success');
+
+  // Clear stale proposal — it was consumed by the buy
+  state.proposal = null;
+  state.proposalId = null;
+  document.getElementById('buy-btn').disabled = true;
 
   // Add to positions
   const pos = {
@@ -1306,7 +1320,8 @@ function switchTab(tab) {
 }
 
 function enableTradePanel() {
-  document.getElementById('buy-btn').disabled = !state.proposal;
+  // Buy button is enabled/disabled by handleProposal and clearProposal
+  // This is called on WS connect — nothing to do, proposal will arrive via subscription
 }
 
 function disableTradePanel() {
