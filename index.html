@@ -887,16 +887,42 @@ function handleWsMessage(msg) {
 // ═══════════════════════════════════════════════
 // SYMBOLS / TICKS
 // ═══════════════════════════════════════════════
+// Decimal places per symbol (last digit is extracted using this)
+const SYMBOL_DECIMALS = {
+  '1HZ10V':  2,
+  '1HZ15V':  3,
+  '1HZ25V':  2,
+  '1HZ30V':  3,
+  '1HZ50V':  2,
+  '1HZ75V':  2,
+  '1HZ90V':  3,
+  '1HZ100V': 2,
+  'JD10':    2,
+  'JD25':    2,
+  'JD50':    2,
+  'JD75':    2,
+  'JD100':   2,
+};
+
+function getDecimals(symbol) {
+  return SYMBOL_DECIMALS[symbol] ?? 2;
+}
+
 function loadSymbols() {
-  // Curated digit-compatible symbols
   const symbols = [
-    { symbol:'R_10',  display:'Volatility 10',  class:'volatility' },
-    { symbol:'R_25',  display:'Volatility 25',  class:'volatility' },
-    { symbol:'R_50',  display:'Volatility 50',  class:'volatility' },
-    { symbol:'R_75',  display:'Volatility 75',  class:'volatility' },
-    { symbol:'R_100', display:'Volatility 100', class:'volatility' },
-    { symbol:'1HZ10V',  display:'Volatility 10 (1s)',  class:'hf' },
-    { symbol:'1HZ100V', display:'Volatility 100 (1s)', class:'hf' },
+    { symbol:'1HZ10V',  display:'Volatility 10 (1s)' },
+    { symbol:'1HZ15V',  display:'Volatility 15 (1s)' },
+    { symbol:'1HZ25V',  display:'Volatility 25 (1s)' },
+    { symbol:'1HZ30V',  display:'Volatility 30 (1s)' },
+    { symbol:'1HZ50V',  display:'Volatility 50 (1s)' },
+    { symbol:'1HZ75V',  display:'Volatility 75 (1s)' },
+    { symbol:'1HZ90V',  display:'Volatility 90 (1s)' },
+    { symbol:'1HZ100V', display:'Volatility 100 (1s)' },
+    { symbol:'JD10',    display:'Jump 10' },
+    { symbol:'JD25',    display:'Jump 25' },
+    { symbol:'JD50',    display:'Jump 50' },
+    { symbol:'JD75',    display:'Jump 75' },
+    { symbol:'JD100',   display:'Jump 100' },
   ];
 
   const el = document.getElementById('symbols-list');
@@ -950,7 +976,9 @@ function handleTick(tick) {
   state.ticks.push(price);
   if (state.ticks.length > 100) state.ticks.shift();
 
-  const lastDigit = Math.floor(Math.abs(price) * 10) % 10;
+  // Last digit is the final decimal digit — use known decimal count for the symbol
+  const decimals = getDecimals(symbol || state.currentSymbol);
+  const lastDigit = Math.round(Math.abs(price) * Math.pow(10, decimals)) % 10;
   state.lastDigits.push(lastDigit);
   if (state.lastDigits.length > 50) state.lastDigits.shift();
 
@@ -958,7 +986,7 @@ function handleTick(tick) {
   if (symbol) {
     const tickEl = document.getElementById(`tick-${symbol}`);
     if (tickEl) {
-      tickEl.textContent = price.toFixed(2);
+      tickEl.textContent = price.toFixed(getDecimals(symbol));
       tickEl.className = `sym-tick sym-${dir}`;
     }
   }
@@ -966,7 +994,7 @@ function handleTick(tick) {
   // Update main display
   if (symbol === state.currentSymbol || !symbol) {
     const priceEl = document.getElementById('tick-price-display');
-    priceEl.textContent = price.toFixed(tick.pip_size || 2);
+    priceEl.textContent = price.toFixed(decimals);
     priceEl.className = `tick-price ${dir}`;
 
     // change badge
