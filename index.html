@@ -765,12 +765,12 @@ body {
           <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);">
             <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--green);font-weight:700;letter-spacing:0.5px;">OEEEEOOOOE</span>
             <span style="font-size:0.7rem;color:var(--text2);">→</span>
-            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT EVEN</span>
+            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT ODD</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);">
             <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent2);font-weight:700;letter-spacing:0.5px;">EOOOOEEEEO</span>
             <span style="font-size:0.7rem;color:var(--text2);">→</span>
-            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT ODD</span>
+            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT EVEN</span>
           </div>
         </div>
       </div>
@@ -781,10 +781,6 @@ body {
         <div class="auto-log-entry info">Waiting to start…</div>
       </div>
 
-      <div class="panel-divider"></div>
-
-      <div class="panel-title" style="margin-bottom:12px;">Last Digit Distribution</div>
-      <div id="last-digits-history" style="color:var(--text3);font-size:0.78rem;">Select a market to view digit history.</div>
     </div>
   </div>
 
@@ -827,8 +823,8 @@ const SYMBOL_DECIMALS = {
 };
 
 const AUTO_PATTERNS = {
-  DIGITEVEN: 'OEEEEOOOOE',
-  DIGITODD:  'EOOOOEEEEO',
+  DIGITODD:  'OEEEEOOOOE',   // OEEEEOOOOE → DIGITODD
+  DIGITEVEN: 'EOOOOEEEEO',   // EOOOOEEEEO → DIGITEVEN
 };
 
 // ═══════════════════════════════════════════════
@@ -1384,8 +1380,8 @@ function autoProcessTick(symbol, price, lastDigit) {
   const pattern = buf.join('');
 
   let contractType = null;
-  if (pattern === AUTO_PATTERNS.DIGITEVEN) contractType = 'DIGITEVEN';
-  else if (pattern === AUTO_PATTERNS.DIGITODD)  contractType = 'DIGITODD';
+  if (pattern === AUTO_PATTERNS.DIGITODD)  contractType = 'DIGITODD';
+  else if (pattern === AUTO_PATTERNS.DIGITEVEN) contractType = 'DIGITEVEN';
   if (!contractType) return;
 
   // Check TP/SL before firing
@@ -1561,22 +1557,28 @@ function updateSymPatternBadge(symbol, buf) {
 function renderPortfolio() {
   const el = document.getElementById('portfolio-content');
   if (!state.positions.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No open positions yet.</div>'; return; }
-  el.innerHTML = state.positions.map(p => `
-    <div class="position-card">
-      <div class="pos-header">
-        <span class="pos-id">#${p.id}</span>
-        <span class="pos-status ${p.status}">${p.status.toUpperCase()}</span>
-      </div>
-      <div class="pos-details">
-        <div class="pos-detail"><div class="label">Type</div><div class="value">${p.type}</div></div>
-        <div class="pos-detail"><div class="label">Symbol</div><div class="value">${p.symbol}</div></div>
-        <div class="pos-detail"><div class="label">Stake</div><div class="value">USD ${p.stake.toFixed(2)}</div></div>
-        <div class="pos-detail"><div class="label">Duration</div><div class="value">${p.duration}t</div></div>
-        <div class="pos-detail"><div class="label">Status</div><div class="value">${p.status}</div></div>
-        <div class="pos-detail"><div class="label">Time</div><div class="value">${p.time}</div></div>
-      </div>
-    </div>
-  `).join('');
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table class="statement-table">
+        <thead><tr>
+          <th>#ID</th><th>Time</th><th>Type</th><th>Symbol</th>
+          <th>Stake</th><th>Payout</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+        ${state.positions.map(p => `
+          <tr>
+            <td class="mono" style="font-size:0.72rem;">${p.id}</td>
+            <td>${p.time}</td>
+            <td>${p.type}</td>
+            <td class="mono">${p.symbol}</td>
+            <td class="mono">USD ${p.stake.toFixed(2)}</td>
+            <td class="mono">USD ${parseFloat(p.payout||0).toFixed(2)}</td>
+            <td><span class="pos-status ${p.status}">${p.status.toUpperCase()}</span></td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function addToStatement(pos, poc) {
