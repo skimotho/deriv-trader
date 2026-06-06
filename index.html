@@ -1056,8 +1056,9 @@ async function connectWebSocket(account) {
 
   state.ws.onopen = () => {
     setWsStatus('connected');
-    state.wsAuthenticated = true;
-    showToast('Connected', 'success');
+    // Only mark authenticated if we're NOT on the public fallback WebSocket
+    state.wsAuthenticated = !state.wsIsPublic;
+    showToast(state.wsIsPublic ? 'Connected (public — trading disabled)' : 'Connected', state.wsIsPublic ? 'info' : 'success');
     wsSend({ balance: 1, subscribe: 1 });
     // Subscribe all symbols for tick monitoring
     ALL_SYMBOLS.forEach(s => wsSend({ ticks: s.symbol, subscribe: 1 }));
@@ -1427,16 +1428,16 @@ function autoSendProposal(symbol, contractType, stake, duration) {
   state.auto.pendingReqId = reqId;
 
   wsSend({
-    proposal:          1,
-    req_id:            reqId,          // integer ✓
-    subscribe:         0,              // one-shot, not streaming
-    amount:            stake,
-    basis:             'stake',
-    contract_type:     contractType,
-    currency:          'USD',
-    underlying_symbol: symbol,
-    duration:          duration,
-    duration_unit:     't',
+    proposal:      1,
+    req_id:        reqId,   // integer ✓
+    // subscribe omitted → one-shot (subscribe:0 is not a valid value per Deriv API)
+    amount:        stake,
+    basis:         'stake',
+    contract_type: contractType,
+    currency:      'USD',
+    symbol:        symbol,  // correct field name per Deriv API (not underlying_symbol)
+    duration:      duration,
+    duration_unit: 't',
   });
 }
 
