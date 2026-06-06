@@ -739,30 +739,20 @@ body {
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Duration (ticks)</label>
-            <select class="form-select" id="auto-duration">
-              <option value="1">1 tick</option>
-              <option value="3">3 ticks</option>
-              <option value="5" selected>5 ticks</option>
-              <option value="10">10 ticks</option>
-            </select>
+            <input type="number" class="form-input" id="auto-duration" value="1" min="1" max="10" step="1">
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Take Profit ($)</label>
-            <input type="number" class="form-input" id="auto-take-profit" value="5.00" min="0.01" step="0.01">
+            <input type="number" class="form-input" id="auto-take-profit" value="15000" min="0.01" step="0.01">
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Stop Loss ($)</label>
-            <input type="number" class="form-input" id="auto-stop-loss" value="3.00" min="0.01" step="0.01">
+            <input type="number" class="form-input" id="auto-stop-loss" value="50000" min="0.01" step="0.01">
           </div>
         </div>
         <div style="margin-top:10px;">
           <label class="form-label">Martingale Multiplier</label>
-          <select class="form-select" id="auto-martingale-mult">
-            <option value="1.5">×1.5</option>
-            <option value="2" selected>×2.0 (Double)</option>
-            <option value="2.5">×2.5</option>
-            <option value="3">×3.0</option>
-          </select>
+          <input type="number" class="form-input" id="auto-martingale-mult" value="2.2" min="1.01" max="10" step="0.01" placeholder="e.g. 2.2">
         </div>
       </div>
 
@@ -1428,16 +1418,16 @@ function autoSendProposal(symbol, contractType, stake, duration) {
   state.auto.pendingReqId = reqId;
 
   wsSend({
-    proposal:      1,
-    req_id:        reqId,   // integer ✓
-    // subscribe omitted → one-shot (subscribe:0 is not a valid value per Deriv API)
-    amount:        stake,
-    basis:         'stake',
-    contract_type: contractType,
-    currency:      'USD',
-    symbol:        symbol,  // correct field name per Deriv API (not underlying_symbol)
-    duration:      duration,
-    duration_unit: 't',
+    proposal:          1,
+    req_id:            reqId,          // integer ✓
+    // subscribe omitted → one-shot request (subscribe:0 is not a valid value)
+    amount:            stake,
+    basis:             'stake',
+    contract_type:     contractType,
+    currency:          'USD',
+    underlying_symbol: symbol,         // ✓ correct field for trading WS endpoint
+    duration:          duration,
+    duration_unit:     't',
   });
 }
 
