@@ -342,16 +342,17 @@ body {
 .ws-dot.disconnected { background: var(--red); }
 .ws-dot.connecting   { background: var(--amber); animation: livepulse 0.8s infinite; }
 
-/* form elements */
-.form-group { margin-bottom: 14px; }
+/* ── AUTO-TRADER FORM ── */
+.form-group { margin-bottom: 12px; }
 .form-label {
-  font-size: 0.72rem; font-weight: 600; color: var(--text2); margin-bottom: 6px;
-  display: block; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 0.68rem; font-weight: 700; color: var(--text2); margin-bottom: 5px;
+  display: block; text-transform: uppercase; letter-spacing: 0.6px;
+  font-family: 'JetBrains Mono', monospace;
 }
 .form-select, .form-input {
-  width: 100%; padding: 9px 12px; border-radius: 8px;
+  width: 100%; padding: 8px 11px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg3); color: var(--text);
-  font-size: 0.875rem; font-family: 'Inter', sans-serif;
+  font-size: 0.85rem; font-family: 'JetBrains Mono', sans-serif;
   transition: border-color var(--tr), box-shadow var(--tr);
   appearance: none; -webkit-appearance: none;
 }
@@ -363,34 +364,7 @@ body {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
 }
 .form-input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-/* digit selector */
-.digit-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
-.digit-btn {
-  padding: 8px 4px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--bg3); color: var(--text2); font-family: 'JetBrains Mono', monospace;
-  font-size: 0.875rem; cursor: pointer; text-align: center; font-weight: 600;
-  transition: all var(--tr);
-}
-.digit-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg4); }
-.digit-btn.selected {
-  background: var(--accent); color: #fff; border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
-}
-
-/* duration buttons */
-.duration-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
-.dur-btn {
-  padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--bg3); color: var(--text2); font-size: 0.75rem; cursor: pointer;
-  text-align: center; transition: all var(--tr); font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-}
-.dur-btn:hover { border-color: var(--border2); color: var(--text); }
-.dur-btn.selected {
-  background: var(--accent); color: #fff; border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
-}
+.params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 
 /* proposal box */
 .proposal-box {
@@ -505,79 +479,74 @@ body {
 
 /* ── AUTO-TRADER PANEL ── */
 .auto-panel {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--card-r); padding: 14px; margin-bottom: 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--card-r); padding: 14px; margin-bottom: 0;
 }
-.auto-panel-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+.auto-section-title {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text3); padding: 0 0 10px; font-family: 'JetBrains Mono', monospace;
+  border-bottom: 1px solid var(--border); margin-bottom: 12px;
 }
-.auto-panel-title {
-  font-size: 0.72rem; font-weight: 700; color: var(--text2);
-  text-transform: uppercase; letter-spacing: 0.8px;
-  font-family: 'JetBrains Mono', monospace;
-}
-/* toggle switch */
-.toggle-wrap { display: flex; align-items: center; gap: 8px; }
-.toggle-label { font-size: 0.72rem; color: var(--text2); font-weight: 600; }
-.toggle {
-  position: relative; width: 38px; height: 21px; cursor: pointer;
-}
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-track {
-  position: absolute; inset: 0; background: var(--bg3);
-  border-radius: 21px; border: 1px solid var(--border2);
-  transition: background 0.2s, border-color 0.2s;
-}
-.toggle input:checked + .toggle-track { background: var(--green); border-color: var(--green); }
-.toggle-thumb {
-  position: absolute; top: 3px; left: 3px;
-  width: 13px; height: 13px; border-radius: 50%;
-  background: #fff; transition: transform 0.2s;
-  pointer-events: none;
-}
-.toggle input:checked ~ .toggle-thumb { transform: translateX(17px); }
+/* status bar */
 .auto-status-row {
-  display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
-  padding: 7px 10px; border-radius: 7px; font-size: 0.75rem;
-  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  padding: 8px 11px; border-radius: 8px; font-size: 0.75rem;
+  background: var(--bg2); border: 1px solid var(--border);
 }
 .auto-status-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0;
 }
-.auto-status-dot.idle    { background: var(--text3); }
-.auto-status-dot.watching{ background: var(--amber); animation: livepulse 1s infinite; }
-.auto-status-dot.trading { background: var(--green);  animation: livepulse 0.6s infinite; }
-.auto-status-dot.stopped { background: var(--red); }
-#auto-status-text { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text2); flex:1; }
-.auto-params { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-.auto-param-group { display: flex; flex-direction: column; gap: 4px; }
-.auto-param-label {
-  font-size: 0.65rem; font-weight: 600; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.5px;
+.auto-status-dot.idle     { background: var(--text3); }
+.auto-status-dot.watching { background: var(--amber); animation: livepulse 1.2s infinite; }
+.auto-status-dot.trading  { background: var(--green); animation: livepulse 0.6s infinite; }
+.auto-status-dot.paused   { background: var(--accent2); }
+.auto-status-dot.stopped  { background: var(--red); }
+#auto-status-text { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text2); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* session stats strip */
+.auto-stats-strip {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 12px;
 }
-.auto-param-input {
-  padding: 6px 9px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--bg3); color: var(--text); font-size: 0.82rem;
-  font-family: 'JetBrains Mono', monospace; width: 100%;
-  transition: border-color var(--tr);
+.auto-stat {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 7px 8px; text-align: center;
 }
-.auto-param-input:focus { outline: none; border-color: var(--accent); }
+.auto-stat-label { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; font-family:'JetBrains Mono',monospace; }
+.auto-stat-value { font-family:'JetBrains Mono',monospace; font-size: 0.85rem; font-weight: 700; color: var(--text); }
+.auto-stat-value.green { color: var(--green); }
+.auto-stat-value.red   { color: var(--red); }
+/* control buttons */
+.auto-ctrl-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 12px; }
+.auto-btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 9px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; border: 1px solid var(--border); background: var(--bg2);
+  color: var(--text2); font-family: 'Inter', sans-serif; letter-spacing: 0.2px;
+  transition: all var(--tr);
+}
+.auto-btn:disabled { opacity: 0.35; cursor: not-allowed; filter: none !important; transform: none !important; }
+.auto-btn.start { background: linear-gradient(135deg,#059669,var(--green)); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(16,185,129,0.3); }
+.auto-btn.start:hover:not(:disabled) { filter:brightness(1.08); transform:translateY(-1px); }
+.auto-btn.pause { background: linear-gradient(135deg,#d97706,var(--amber)); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(245,158,11,0.3); }
+.auto-btn.pause:hover:not(:disabled) { filter:brightness(1.08); transform:translateY(-1px); }
+.auto-btn.stop  { background: linear-gradient(135deg,#dc2626,var(--red)); color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(239,68,68,0.3); }
+.auto-btn.stop:hover:not(:disabled)  { filter:brightness(1.08); transform:translateY(-1px); }
+/* log */
 .auto-log {
-  max-height: 120px; overflow-y: auto; border-radius: 7px;
-  border: 1px solid var(--border); background: var(--bg);
+  max-height: 130px; overflow-y: auto; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--bg2);
   padding: 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
 }
-.auto-log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text2); }
+.auto-log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text2); line-height:1.4; }
 .auto-log-entry.win  { color: var(--green); }
 .auto-log-entry.loss { color: var(--red); }
 .auto-log-entry.info { color: var(--accent2); }
 .auto-log-entry.warn { color: var(--amber); }
-/* symbol monitor badges */
+/* symbol pattern badge */
 .sym-pattern-badge {
-  font-size: 0.6rem; font-family:'JetBrains Mono',monospace;
-  padding: 1px 5px; border-radius: 4px; margin-left: 4px;
-  background: rgba(99,102,241,0.15); color: var(--accent2);
-  border: 1px solid rgba(99,102,241,0.2);
+  font-size: 0.58rem; font-family:'JetBrains Mono',monospace;
+  padding: 1px 4px; border-radius: 3px; margin-left: 3px;
+  background: rgba(99,102,241,0.12); color: var(--text3);
+  border: 1px solid rgba(99,102,241,0.15);
 }
 .sym-pattern-badge.match {
   background: rgba(16,185,129,0.15); color: var(--green);
@@ -713,7 +682,7 @@ body {
   <!-- RIGHT PANEL -->
   <div id="right-panel">
     <div class="panel-header">
-      <div class="panel-title">Place Trade</div>
+      <div class="panel-title">⚡ Auto-Trader</div>
       <div class="ws-status-pill" id="ws-status-pill">
         <span class="ws-dot disconnected" id="ws-dot"></span>
         <span id="ws-status-text">Offline</span>
@@ -721,106 +690,111 @@ body {
     </div>
 
     <div class="panel-scroll">
-      <div class="form-group">
-        <label class="form-label">Contract Type</label>
-        <select class="form-select" id="contract-type" onchange="onContractTypeChange()">
-          <option value="DIGITMATCH">Digit Matches</option>
-          <option value="DIGITDIFF">Digit Differs</option>
-          <option value="DIGITOVER">Digit Over</option>
-          <option value="DIGITUNDER">Digit Under</option>
-          <option value="DIGITEVEN">Digit Even</option>
-          <option value="DIGITODD">Digit Odd</option>
-        </select>
+
+      <!-- STATUS BAR -->
+      <div class="auto-status-row">
+        <span class="auto-status-dot idle" id="auto-status-dot"></span>
+        <span id="auto-status-text">Idle — configure and press Start</span>
       </div>
 
-      <div class="form-group" id="digit-group">
-        <label class="form-label">Prediction Digit</label>
-        <div class="digit-grid" id="digit-grid"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Duration</label>
-        <div class="duration-grid" id="duration-grid"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Stake (USD)</label>
-        <input type="number" class="form-input" id="stake-input" value="0.35" min="0.35" step="0.01" onchange="requestProposal()">
-      </div>
-
-      <div class="proposal-box" id="proposal-box">
-        <div class="proposal-row">
-          <span>Payout</span>
-          <span class="val loading" id="prop-payout">Select market</span>
+      <!-- SESSION STATS STRIP -->
+      <div class="auto-stats-strip">
+        <div class="auto-stat">
+          <div class="auto-stat-label">Session P&L</div>
+          <div class="auto-stat-value" id="auto-pnl-display">$0.00</div>
         </div>
-        <div class="proposal-row">
-          <span>Stake</span>
-          <span class="val" id="prop-stake">—</span>
+        <div class="auto-stat">
+          <div class="auto-stat-label">Trades</div>
+          <div class="auto-stat-value" id="auto-trades-display">0</div>
         </div>
-        <div class="proposal-row">
-          <span>Profit if won</span>
-          <span class="val profit" id="prop-profit">—</span>
+        <div class="auto-stat">
+          <div class="auto-stat-label">Win Rate</div>
+          <div class="auto-stat-value" id="auto-wr-display">—</div>
         </div>
       </div>
 
-      <div class="buy-btn-wrap">
-        <button class="btn btn-green" id="buy-btn" onclick="placeTrade('BUY')" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          <span id="buy-label">Buy Contract</span>
+      <!-- CONTROL BUTTONS -->
+      <div class="auto-ctrl-row">
+        <button class="auto-btn start" id="btn-start" onclick="autoStart()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Start
         </button>
+        <button class="auto-btn pause" id="btn-pause" onclick="autoPause()" disabled>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          Pause
+        </button>
+        <button class="auto-btn stop" id="btn-stop" onclick="autoStop()" disabled>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg>
+          Stop
+        </button>
+      </div>
+
+      <!-- CONFIG -->
+      <div class="auto-panel">
+        <div class="auto-section-title">Configuration</div>
+        <div class="params-grid">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Initial Stake ($)</label>
+            <input type="number" class="form-input" id="auto-base-stake" value="0.35" min="0.35" step="0.01">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Duration (ticks)</label>
+            <select class="form-select" id="auto-duration">
+              <option value="1">1 tick</option>
+              <option value="3">3 ticks</option>
+              <option value="5" selected>5 ticks</option>
+              <option value="10">10 ticks</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Take Profit ($)</label>
+            <input type="number" class="form-input" id="auto-take-profit" value="5.00" min="0.01" step="0.01">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Stop Loss ($)</label>
+            <input type="number" class="form-input" id="auto-stop-loss" value="3.00" min="0.01" step="0.01">
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label class="form-label">Martingale Multiplier</label>
+          <select class="form-select" id="auto-martingale-mult">
+            <option value="1.5">×1.5</option>
+            <option value="2" selected>×2.0 (Double)</option>
+            <option value="2.5">×2.5</option>
+            <option value="3">×3.0</option>
+          </select>
+        </div>
       </div>
 
       <div class="panel-divider"></div>
 
-      <!-- AUTO-TRADER PANEL -->
-      <div class="auto-panel">
-        <div class="auto-panel-header">
-          <span class="auto-panel-title">⚡ Auto-Trader</span>
-          <div class="toggle-wrap">
-            <span class="toggle-label" id="auto-toggle-label">OFF</span>
-            <label class="toggle">
-              <input type="checkbox" id="auto-toggle" onchange="onAutoToggle()">
-              <span class="toggle-track"></span>
-              <span class="toggle-thumb"></span>
-            </label>
+      <!-- PATTERNS INFO -->
+      <div style="margin-bottom:12px;">
+        <div class="panel-title" style="margin-bottom:8px;">Active Strategies</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--green);font-weight:700;letter-spacing:0.5px;">OEEEEOOOOE</span>
+            <span style="font-size:0.7rem;color:var(--text2);">→</span>
+            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT EVEN</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent2);font-weight:700;letter-spacing:0.5px;">EOOOOEEEEO</span>
+            <span style="font-size:0.7rem;color:var(--text2);">→</span>
+            <span style="font-size:0.72rem;font-weight:600;color:var(--text);">DIGIT ODD</span>
           </div>
         </div>
-        <div class="auto-status-row">
-          <span class="auto-status-dot idle" id="auto-status-dot"></span>
-          <span id="auto-status-text">Idle — toggle to start watching</span>
-        </div>
-        <div class="auto-params">
-          <div class="auto-param-group">
-            <span class="auto-param-label">Base Stake (USD)</span>
-            <input type="number" class="auto-param-input" id="auto-base-stake" value="0.35" min="0.35" step="0.01">
-          </div>
-          <div class="auto-param-group">
-            <span class="auto-param-label">Duration (ticks)</span>
-            <select class="auto-param-input" id="auto-duration">
-              <option value="1">1t</option>
-              <option value="3">3t</option>
-              <option value="5" selected>5t</option>
-              <option value="10">10t</option>
-            </select>
-          </div>
-          <div class="auto-param-group">
-            <span class="auto-param-label">Take Profit ($)</span>
-            <input type="number" class="auto-param-input" id="auto-take-profit" value="5.00" min="0.01" step="0.01">
-          </div>
-          <div class="auto-param-group">
-            <span class="auto-param-label">Stop Loss ($)</span>
-            <input type="number" class="auto-param-input" id="auto-stop-loss" value="3.00" min="0.01" step="0.01">
-          </div>
-        </div>
-        <div class="auto-log" id="auto-log">
-          <div class="auto-log-entry info">Auto-trader log will appear here…</div>
-        </div>
+      </div>
+
+      <!-- TRADE LOG -->
+      <div class="panel-title" style="margin-bottom:8px;">Trade Log</div>
+      <div class="auto-log" id="auto-log">
+        <div class="auto-log-entry info">Waiting to start…</div>
       </div>
 
       <div class="panel-divider"></div>
 
       <div class="panel-title" style="margin-bottom:12px;">Last Digit Distribution</div>
-      <div id="last-digits-history" style="color:var(--text3);font-size:0.78rem;">Waiting for ticks…</div>
+      <div id="last-digits-history" style="color:var(--text3);font-size:0.78rem;">Select a market to view digit history.</div>
     </div>
   </div>
 
@@ -844,6 +818,29 @@ const CONFIG = {
   WS_PUBLIC:    'wss://api.derivws.com/trading/v1/options/ws/public',
 };
 
+const ALL_SYMBOLS = [
+  { symbol:'1HZ10V',  display:'Volatility 10 (1s)',  group:'Volatility (1s)' },
+  { symbol:'1HZ25V',  display:'Volatility 25 (1s)',  group:'Volatility (1s)' },
+  { symbol:'1HZ50V',  display:'Volatility 50 (1s)',  group:'Volatility (1s)' },
+  { symbol:'1HZ75V',  display:'Volatility 75 (1s)',  group:'Volatility (1s)' },
+  { symbol:'1HZ100V', display:'Volatility 100 (1s)', group:'Volatility (1s)' },
+  { symbol:'JD10',    display:'Jump 10',              group:'Jump Indices' },
+  { symbol:'JD25',    display:'Jump 25',              group:'Jump Indices' },
+  { symbol:'JD50',    display:'Jump 50',              group:'Jump Indices' },
+  { symbol:'JD75',    display:'Jump 75',              group:'Jump Indices' },
+  { symbol:'JD100',   display:'Jump 100',             group:'Jump Indices' },
+];
+
+const SYMBOL_DECIMALS = {
+  '1HZ10V':2,'1HZ25V':2,'1HZ50V':2,'1HZ75V':2,'1HZ100V':2,
+  'JD10':2,'JD25':2,'JD50':2,'JD75':2,'JD100':2,
+};
+
+const AUTO_PATTERNS = {
+  DIGITEVEN: 'OEEEEOOOOE',
+  DIGITODD:  'EOOOOEEEEO',
+};
+
 // ═══════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════
@@ -857,25 +854,23 @@ let state = {
   currentSymbol: null,
   ticks: [],
   lastDigits: [],
-  proposal: null,
   positions: [],
   statement: [],
-  selectedDigit: 5,
-  selectedDuration: 5,
   sessionStats: { pnl: 0, wins: 0, trades: 0 },
-  proposalId: null,
-  proposalTimer: null,
   theme: 'dark',
   // ── AUTO-TRADER ──
   auto: {
-    enabled: false,
-    running: false,          // true while a contract is open
-    currentStake: 0.35,      // current martingale stake
-    sessionPnl: 0,           // auto-session pnl
-    patternBuffers: {},      // symbol -> array of 'E'/'O' (last 10)
-    activeSymbol: null,      // symbol currently in a trade
+    status: 'idle',        // idle | watching | trading | paused | stopped
+    running: false,        // contract currently open
+    currentStake: 0.35,    // current (possibly martingaled) stake
+    sessionPnl: 0,
+    sessionTrades: 0,
+    sessionWins: 0,
+    patternBuffers: {},    // symbol → ['E','O',…] last 10
+    activeSymbol: null,
     activeContractId: null,
-    activePoc: null,
+    pendingReqId: null,    // integer req_id for pending auto proposal
+    reqCounter: 1,         // monotonic integer counter for req_id
   },
 };
 
@@ -963,16 +958,12 @@ async function handleCallback() {
 async function initApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'grid';
-
   document.getElementById('topbar-right').innerHTML = `
     <span id="account-env-badge" class="badge demo">DEMO</span>
     <span class="mono" style="font-size:0.78rem;color:var(--text2);" id="topbar-balance">—</span>
     <span class="icon-btn" title="Toggle theme" onclick="toggleTheme()" id="theme-toggle">${state.theme==='dark'?'☀️':'🌙'}</span>
     <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
   `;
-
-  buildDigitGrid();
-  buildDurationGrid();
   await loadAccounts();
   loadSymbols();
 }
@@ -1068,10 +1059,9 @@ async function connectWebSocket(account) {
     state.wsAuthenticated = true;
     showToast('Connected', 'success');
     wsSend({ balance: 1, subscribe: 1 });
-    if (state.currentSymbol) { subscribeToTicks(state.currentSymbol); requestProposal(); }
-    // Re-subscribe all symbols for auto-trader if it was running
-    if (state.auto.enabled) autoSubscribeAllSymbols();
-    enableTradePanel();
+    // Subscribe all symbols for tick monitoring
+    ALL_SYMBOLS.forEach(s => wsSend({ ticks: s.symbol, subscribe: 1 }));
+    if (state.currentSymbol) subscribeToTicks(state.currentSymbol);
   };
   state.ws.onmessage = (event) => {
     try { handleWsMessage(JSON.parse(event.data)); } catch(e) { console.warn('WS parse error', e); }
@@ -1080,7 +1070,6 @@ async function connectWebSocket(account) {
   state.ws.onclose = () => {
     setWsStatus('disconnected');
     state.wsAuthenticated = false;
-    disableTradePanel();
     setTimeout(() => { if (state.activeAccount) connectWebSocket(state.activeAccount); }, 5000);
   };
 }
@@ -1097,101 +1086,70 @@ function wsSend(obj) {
   if (state.ws && state.ws.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify(obj));
 }
 
+// ═══════════════════════════════════════════════
+// WS MESSAGE ROUTER
+// ═══════════════════════════════════════════════
 function handleWsMessage(msg) {
   const type = msg.msg_type || msg.type;
+
   if (msg.error) {
-    if (type === 'buy') {
-      handleBuyResponse(msg);
-    } else if (type === 'proposal') {
-      state.proposal = null; state.proposalId = null;
-      document.getElementById('buy-btn').disabled = true;
-      showToast(msg.error.message || 'Proposal error', 'error');
-      console.warn('WS proposal error:', msg.error);
-      setTimeout(requestProposal, 1000);
+    // Ignore req_id validation errors on auto proposals — handle gracefully
+    if (type === 'proposal' && state.auto.pendingReqId !== null) {
+      autoLog('Proposal error: ' + (msg.error.message || 'unknown'), 'warn');
+      state.auto.running = false;
+      state.auto.pendingReqId = null;
+      if (state.auto.status === 'trading') setAutoStatus('watching');
+    } else if (type === 'buy' && state.auto.running) {
+      handleAutoBuyResponse(msg);
     } else {
-      showToast(msg.error.message || 'API error', 'error');
-      console.warn('WS error:', msg.error);
+      console.warn('WS error:', type, msg.error);
+      if (type !== 'ticks') showToast(msg.error.message || 'API error', 'error');
     }
     return;
   }
-  if (type === 'tick') handleTick(msg.tick || msg);
-  else if (type === 'proposal') {
-    const proposal = msg.proposal || msg;
-    const reqId = msg.req_id || (msg.proposal && msg.proposal.req_id);
-    if (state.auto.enabled && state.auto.running && state.auto.pendingProposalReqId) {
-      handleAutoProposal(proposal, String(reqId));
-    } else {
-      handleProposal(proposal);
-    }
-  }
-  else if (type === 'buy') {
-    const buy = msg.buy || msg;
-    if (state.auto.enabled && state.auto.running && !state.proposalId) {
-      handleAutoBuyResponse(buy);
-      // Also record in the main positions list
-      if (!buy.error) {
-        const pos = {
-          id: buy.contract_id || buy.id,
-          type: 'AUTO',
-          symbol: state.auto.activeSymbol || '—',
-          stake: state.auto.currentStake,
-          digit: '—',
-          duration: parseInt(document.getElementById('auto-duration').value) || 5,
-          status: 'open',
-          time: new Date().toLocaleTimeString(),
-          payout: 0,
-        };
-        state.positions.unshift(pos);
-        renderPortfolio();
-      }
-    } else {
-      handleBuyResponse(buy);
-    }
-  }
-  else if (type === 'balance') handleBalance(msg.balance || msg);
-  else if (type === 'portfolio') handlePortfolio(msg.portfolio || msg);
-  else if (type === 'statement') handleStatement(msg.statement || msg);
+
+  if (type === 'tick')                    handleTick(msg.tick || msg);
+  else if (type === 'proposal')           handleProposalMsg(msg);
+  else if (type === 'buy')                handleBuyMsg(msg);
+  else if (type === 'balance')            handleBalance(msg.balance || msg);
+  else if (type === 'portfolio')          handlePortfolio(msg.portfolio || msg);
+  else if (type === 'statement')          handleStatement(msg.statement || msg);
   else if (type === 'proposal_open_contract') handlePOC(msg.proposal_open_contract || msg);
+}
+
+function handleProposalMsg(msg) {
+  const proposal = msg.proposal || msg;
+  const incomingReqId = msg.req_id !== undefined ? msg.req_id : null;
+  // Route to auto if this req_id matches our pending auto proposal
+  if (state.auto.pendingReqId !== null && incomingReqId === state.auto.pendingReqId) {
+    handleAutoProposal(proposal);
+  }
+  // (no manual proposal routing needed — manual trading removed)
+}
+
+function handleBuyMsg(msg) {
+  const buy = msg.buy || msg;
+  if (state.auto.running) {
+    handleAutoBuyResponse(buy);
+  }
 }
 
 // ═══════════════════════════════════════════════
 // SYMBOLS / TICKS
 // ═══════════════════════════════════════════════
-const SYMBOL_DECIMALS = {
-  '1HZ10V': 2, '1HZ25V': 2, '1HZ50V': 2, '1HZ75V': 2, '1HZ100V': 2,
-  'JD10': 2, 'JD25': 2, 'JD50': 2, 'JD75': 2, 'JD100': 2,
-};
 function getDecimals(symbol) { return SYMBOL_DECIMALS[symbol] ?? 2; }
 
 function loadSymbols() {
-  const groups = [
-    {
-      label: 'Volatility (1s)',
-      items: [
-        { symbol:'1HZ10V',  display:'Volatility 10 (1s)' },
-        { symbol:'1HZ25V',  display:'Volatility 25 (1s)' },
-        { symbol:'1HZ50V',  display:'Volatility 50 (1s)' },
-        { symbol:'1HZ75V',  display:'Volatility 75 (1s)' },
-        { symbol:'1HZ100V', display:'Volatility 100 (1s)' },
-      ]
-    },
-    {
-      label: 'Jump Indices',
-      items: [
-        { symbol:'JD10',  display:'Jump 10' },
-        { symbol:'JD25',  display:'Jump 25' },
-        { symbol:'JD50',  display:'Jump 50' },
-        { symbol:'JD75',  display:'Jump 75' },
-        { symbol:'JD100', display:'Jump 100' },
-      ]
-    }
-  ];
-
+  const groups = {};
+  ALL_SYMBOLS.forEach(s => {
+    if (!groups[s.group]) groups[s.group] = [];
+    groups[s.group].push(s);
+  });
   const el = document.getElementById('symbols-list');
-  el.innerHTML = groups.map(g => `
+  el.innerHTML = Object.entries(groups).map(([label, items]) => `
     <div class="market-group">
-      <div class="market-group-label">${g.label}</div>
-      ${g.items.map(s => `
+      <div class="market-group-label">${label}</div>
+      ${items.map(s => `
         <div class="symbol-item" id="sym-${s.symbol}" onclick="selectSymbol('${s.symbol}','${s.display}')">
           <span class="sym-name">${s.display}</span>
           <span class="sym-tick" id="tick-${s.symbol}">—</span>
@@ -1202,8 +1160,6 @@ function loadSymbols() {
 }
 
 function selectSymbol(symbol, display) {
-  if (state.currentSymbol === symbol) return;
-  if (state.currentSymbol) wsSend({ forget_all: ['ticks', 'proposal'] });
   document.querySelectorAll('.symbol-item').forEach(el => el.classList.remove('active'));
   const el = document.getElementById(`sym-${symbol}`);
   if (el) el.classList.add('active');
@@ -1218,8 +1174,6 @@ function selectSymbol(symbol, display) {
   document.getElementById('tick-tape').innerHTML = '';
   document.getElementById('last-digits-history').textContent = 'Waiting for ticks…';
   subscribeToTicks(symbol);
-  clearProposal();
-  requestProposal();
 }
 
 function subscribeToTicks(symbol) { wsSend({ ticks: symbol, subscribe: 1 }); }
@@ -1227,26 +1181,30 @@ function subscribeToTicks(symbol) { wsSend({ ticks: symbol, subscribe: 1 }); }
 function handleTick(tick) {
   const price  = parseFloat(tick.quote || tick.price || 0);
   const symbol = tick.symbol;
-  const prev   = state.ticks[state.ticks.length - 1];
-  const dir    = prev ? (price > prev ? 'up' : price < prev ? 'down' : 'flat') : 'flat';
+  if (!price || !symbol) return;
 
-  state.ticks.push(price);
-  if (state.ticks.length > 100) state.ticks.shift();
+  const decimals   = getDecimals(symbol);
+  const lastDigit  = Math.round(Math.abs(price) * Math.pow(10, decimals)) % 10;
 
-  const decimals = getDecimals(symbol || state.currentSymbol);
-  const lastDigit = Math.round(Math.abs(price) * Math.pow(10, decimals)) % 10;
-  state.lastDigits.push(lastDigit);
-  if (state.lastDigits.length > 50) state.lastDigits.shift();
-
-  // Feed auto-trader (all symbols, not just currentSymbol)
-  if (symbol) autoProcessTick(symbol, price);
-
-  if (symbol) {
-    const tickEl = document.getElementById(`tick-${symbol}`);
-    if (tickEl) { tickEl.textContent = price.toFixed(getDecimals(symbol)); tickEl.className = `sym-tick sym-${dir}`; }
+  // Update sidebar tick value
+  const tickEl = document.getElementById(`tick-${symbol}`);
+  if (tickEl) {
+    const prev = parseFloat(tickEl.dataset.prev || 0);
+    const dir  = price > prev ? 'up' : price < prev ? 'down' : 'flat';
+    tickEl.textContent = price.toFixed(decimals);
+    tickEl.className = `sym-tick sym-${dir}`;
+    tickEl.dataset.prev = price;
   }
 
-  if (symbol === state.currentSymbol || !symbol) {
+  // Update main tick display for selected symbol
+  if (symbol === state.currentSymbol) {
+    const prev = state.ticks[state.ticks.length - 1];
+    const dir  = prev ? (price > prev ? 'up' : price < prev ? 'down' : 'flat') : 'flat';
+    state.ticks.push(price);
+    if (state.ticks.length > 100) state.ticks.shift();
+    state.lastDigits.push(lastDigit);
+    if (state.lastDigits.length > 50) state.lastDigits.shift();
+
     const priceEl = document.getElementById('tick-price-display');
     priceEl.textContent = price.toFixed(decimals);
     priceEl.className = `tick-price ${dir}`;
@@ -1260,6 +1218,9 @@ function handleTick(tick) {
     updateTickTape(lastDigit);
     updateDigitsHistory();
   }
+
+  // Feed auto-trader for ALL symbols
+  autoProcessTick(symbol, price, lastDigit);
 }
 
 function updateTickTape(digit) {
@@ -1283,178 +1244,324 @@ function updateDigitsHistory() {
     const hot = c === max && total > 5;
     return `<div class="digit-stat-row">
       <span class="digit-stat-label" style="${hot ? 'color:var(--accent2);' : ''}">${d}</span>
-      <div class="digit-stat-bar">
-        <div class="digit-stat-fill" style="width:${pct}%;${hot?'background:var(--accent2);':''}"></div>
-      </div>
+      <div class="digit-stat-bar"><div class="digit-stat-fill" style="width:${pct}%;${hot?'background:var(--accent2);':''}"></div></div>
       <span class="digit-stat-pct">${pct}%</span>
     </div>`;
   }).join('');
 }
 
 // ═══════════════════════════════════════════════
-// TRADE FORM
+// AUTO-TRADER CONTROLS
 // ═══════════════════════════════════════════════
-function buildDigitGrid() {
-  const grid = document.getElementById('digit-grid');
-  grid.innerHTML = Array.from({length:10},(_,i)=>
-    `<button class="digit-btn ${i===5?'selected':''}" onclick="selectDigit(${i})">${i}</button>`
-  ).join('');
-}
-
-function selectDigit(d) {
-  state.selectedDigit = d;
-  document.querySelectorAll('.digit-btn').forEach((b,i) => b.classList.toggle('selected', i===d));
-  requestProposal();
-}
-
-function buildDurationGrid() {
-  const durations = [1, 3, 5, 10];
-  const grid = document.getElementById('duration-grid');
-  grid.innerHTML = durations.map(d =>
-    `<button class="dur-btn ${d===5?'selected':''}" onclick="selectDuration(${d})">${d}t</button>`
-  ).join('');
-}
-
-function selectDuration(d) {
-  state.selectedDuration = d;
-  document.querySelectorAll('.dur-btn').forEach(b => b.classList.toggle('selected', b.textContent === `${d}t`));
-  requestProposal();
-}
-
-function onContractTypeChange() {
-  const type = document.getElementById('contract-type').value;
-  const showDigit = ['DIGITMATCH','DIGITDIFF','DIGITOVER','DIGITUNDER'].includes(type);
-  document.getElementById('digit-group').style.display = showDigit ? 'block' : 'none';
-  requestProposal();
-}
-
-// ═══════════════════════════════════════════════
-// PROPOSAL
-// ═══════════════════════════════════════════════
-function requestProposal() {
-  if (!state.currentSymbol || !state.wsAuthenticated) return;
-  if (state.wsIsPublic) {
-    showToast('Trading requires an authenticated connection. Please log in.', 'error');
+function autoStart() {
+  if (!state.wsAuthenticated || state.wsIsPublic) {
+    showToast('An authenticated connection is required to trade.', 'error');
     return;
   }
-  clearTimeout(state.proposalTimer);
-  state.proposalTimer = setTimeout(_doProposal, 400);
+  // Reset session stats and stake on fresh start
+  state.auto.sessionPnl    = 0;
+  state.auto.sessionTrades = 0;
+  state.auto.sessionWins   = 0;
+  state.auto.currentStake  = parseFloat(document.getElementById('auto-base-stake').value) || 0.35;
+  state.auto.patternBuffers = {};
+  state.auto.running       = false;
+  state.auto.activeContractId = null;
+  state.auto.pendingReqId  = null;
+  updateAutoSessionDisplay();
+  setAutoStatus('watching');
+  // Lock config inputs while running
+  setConfigLocked(true);
+  autoLog('Auto-trader started. Base stake: $' + state.auto.currentStake.toFixed(2)
+    + ' | TP: $' + document.getElementById('auto-take-profit').value
+    + ' | SL: $' + document.getElementById('auto-stop-loss').value, 'info');
 }
 
-function _doProposal() {
-  if (state.proposalId) { wsSend({ forget: state.proposalId }); state.proposalId = null; }
-  const type  = document.getElementById('contract-type').value;
-  const stake = parseFloat(document.getElementById('stake-input').value) || 0.35;
-  const dur   = state.selectedDuration;
+function autoPause() {
+  if (state.auto.status === 'paused') {
+    // Resume
+    setAutoStatus('watching');
+    autoLog('Resumed — watching for patterns…', 'info');
+    document.getElementById('btn-pause').innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause';
+  } else {
+    setAutoStatus('paused');
+    autoLog('Paused — will not fire new trades. Current contract continues.', 'warn');
+    document.getElementById('btn-pause').innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Resume';
+  }
+}
 
-  document.getElementById('prop-payout').textContent = 'Loading…';
-  document.getElementById('prop-payout').className = 'val loading';
+function autoStop() {
+  setAutoStatus('stopped');
+  setConfigLocked(false);
+  state.auto.running = false;
+  state.auto.pendingReqId = null;
+  const pnl = state.auto.sessionPnl;
+  autoLog('Stopped manually. Session P&L: ' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)
+    + ' | Trades: ' + state.auto.sessionTrades, pnl >= 0 ? 'win' : 'loss');
+  // Reset pause button label
+  document.getElementById('btn-pause').innerHTML =
+    '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause';
+}
 
-  const req = {
-    proposal: 1, subscribe: 1, amount: stake, basis: 'stake',
-    contract_type: type, currency: 'USD', underlying_symbol: state.currentSymbol,
-    duration: dur, duration_unit: 't',
+function setAutoStatus(status) {
+  state.auto.status = status;
+  const dot = document.getElementById('auto-status-dot');
+  const txt = document.getElementById('auto-status-text');
+  const btnStart = document.getElementById('btn-start');
+  const btnPause = document.getElementById('btn-pause');
+  const btnStop  = document.getElementById('btn-stop');
+  if (!dot) return;
+
+  const labels = {
+    idle:     'Idle — configure and press Start',
+    watching: 'Watching all symbols for pattern…',
+    trading:  'Contract open — awaiting settlement…',
+    paused:   'Paused — press Resume to continue',
+    stopped:  'Stopped',
   };
-  if (['DIGITMATCH','DIGITDIFF','DIGITOVER','DIGITUNDER'].includes(type)) req.barrier = String(state.selectedDigit);
-  wsSend(req);
+  dot.className = 'auto-status-dot ' + status;
+  txt.textContent = labels[status] || status;
+
+  const isActive = ['watching','trading','paused'].includes(status);
+  btnStart.disabled = isActive;
+  btnPause.disabled = !isActive;
+  btnStop.disabled  = !isActive;
 }
 
-function handleProposal(proposal) {
-  state.proposal = proposal;
-  state.proposalId = proposal.id;
-  const payout = parseFloat(proposal.payout || 0);
-  const stake  = parseFloat(document.getElementById('stake-input').value) || 0.35;
-  const profit = (payout - stake).toFixed(2);
-
-  document.getElementById('prop-payout').textContent = `USD ${payout.toFixed(2)}`;
-  document.getElementById('prop-payout').className = 'val';
-  document.getElementById('prop-stake').textContent = `USD ${stake.toFixed(2)}`;
-  document.getElementById('prop-profit').textContent = `+USD ${profit}`;
-  document.getElementById('prop-profit').style.color = profit > 0 ? 'var(--green)' : 'var(--text3)';
-  document.getElementById('buy-btn').disabled = false;
+function setConfigLocked(locked) {
+  ['auto-base-stake','auto-duration','auto-take-profit','auto-stop-loss','auto-martingale-mult']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = locked;
+    });
 }
 
-function clearProposal() {
-  if (state.proposalId) { wsSend({ forget: state.proposalId }); state.proposalId = null; }
-  state.proposal = null;
-  document.getElementById('prop-payout').textContent = 'Select market';
-  document.getElementById('prop-payout').className = 'val loading';
-  document.getElementById('prop-stake').textContent = '—';
-  document.getElementById('prop-profit').textContent = '—';
-  document.getElementById('buy-btn').disabled = true;
+function autoLog(msg, type = 'info') {
+  const log = document.getElementById('auto-log');
+  if (!log) return;
+  const entry = document.createElement('div');
+  const ts = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  entry.className = 'auto-log-entry ' + type;
+  entry.textContent = '[' + ts + '] ' + msg;
+  log.insertBefore(entry, log.firstChild);
+  while (log.children.length > 100) log.removeChild(log.lastChild);
+}
+
+function updateAutoSessionDisplay() {
+  const pnl = state.auto.sessionPnl;
+  const trades = state.auto.sessionTrades;
+  const wins = state.auto.sessionWins;
+  const pnlEl = document.getElementById('auto-pnl-display');
+  const trEl  = document.getElementById('auto-trades-display');
+  const wrEl  = document.getElementById('auto-wr-display');
+  if (pnlEl) {
+    pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+    pnlEl.className = 'auto-stat-value ' + (pnl > 0 ? 'green' : pnl < 0 ? 'red' : '');
+  }
+  if (trEl) trEl.textContent = trades;
+  if (wrEl) wrEl.textContent = trades > 0 ? (wins / trades * 100).toFixed(0) + '%' : '—';
+
+  // Also update main stats row
+  document.getElementById('stat-trades').textContent = state.sessionStats.trades;
+  const spnl = state.sessionStats.pnl;
+  const pnlMain = document.getElementById('stat-pnl');
+  pnlMain.textContent = (spnl >= 0 ? '+' : '') + 'USD ' + spnl.toFixed(2);
+  pnlMain.className = 'stat-value ' + (spnl >= 0 ? 'green' : 'red');
+  const wr = state.sessionStats.trades ? (state.sessionStats.wins / state.sessionStats.trades * 100).toFixed(0) : 0;
+  const wrMain = document.getElementById('stat-winrate');
+  wrMain.textContent = wr + '%';
+  wrMain.className = 'stat-value ' + (wr >= 50 ? 'green' : 'red');
 }
 
 // ═══════════════════════════════════════════════
-// BUY / TRADE
+// AUTO-TRADER CORE
 // ═══════════════════════════════════════════════
-function placeTrade(action) {
-  if (!state.proposal || !state.proposalId) { showToast('No proposal available.', 'error'); return; }
-  const buyBtn = document.getElementById('buy-btn');
-  buyBtn.innerHTML = '<span class="spinner"></span>';
-  buyBtn.disabled = true;
-  const askPrice = parseFloat(state.proposal.ask_price || state.proposal.display_value || document.getElementById('stake-input').value) || 0.35;
-  wsSend({ buy: String(state.proposalId), price: askPrice });
+function autoProcessTick(symbol, price, lastDigit) {
+  if (state.auto.status !== 'watching') return;  // idle / paused / stopped / trading → skip
+
+  const eo = lastDigit % 2 === 0 ? 'E' : 'O';
+  if (!state.auto.patternBuffers[symbol]) state.auto.patternBuffers[symbol] = [];
+  const buf = state.auto.patternBuffers[symbol];
+  buf.push(eo);
+  if (buf.length > 10) buf.shift();
+
+  // Visual badge: show last 5 chars on the symbol row
+  updateSymPatternBadge(symbol, buf);
+
+  if (buf.length < 10) return;
+  const pattern = buf.join('');
+
+  let contractType = null;
+  if (pattern === AUTO_PATTERNS.DIGITEVEN) contractType = 'DIGITEVEN';
+  else if (pattern === AUTO_PATTERNS.DIGITODD)  contractType = 'DIGITODD';
+  if (!contractType) return;
+
+  // Check TP/SL before firing
+  const tp = parseFloat(document.getElementById('auto-take-profit').value) || 5;
+  const sl = parseFloat(document.getElementById('auto-stop-loss').value) || 3;
+  if (state.auto.sessionPnl >= tp) { autoHitTP(); return; }
+  if (state.auto.sessionPnl <= -sl) { autoHitSL(); return; }
+
+  // Fire
+  state.auto.running      = true;
+  state.auto.activeSymbol = symbol;
+  state.auto.patternBuffers[symbol] = [];  // reset buffer after trigger
+  const dur   = parseInt(document.getElementById('auto-duration').value) || 5;
+  const stake = state.auto.currentStake;
+
+  autoLog('[' + pattern + '] on ' + symbol + ' → ' + contractType + ' stake:$' + stake.toFixed(2), 'info');
+  setAutoStatus('trading');
+  autoSendProposal(symbol, contractType, stake, dur);
 }
 
-function handleBuyResponse(buy) {
-  const buyBtn = document.getElementById('buy-btn');
-  buyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span id="buy-label">Buy Contract</span>`;
-
-  if (buy.error) {
-    buyBtn.disabled = false;
-    showToast(`Trade failed: ${buy.error.message}`, 'error');
-    state.proposal = null; state.proposalId = null;
-    buyBtn.disabled = true;
-    setTimeout(requestProposal, 300);
+function autoSendProposal(symbol, contractType, stake, duration) {
+  if (!state.wsAuthenticated || state.wsIsPublic) {
+    autoLog('Error: requires authenticated WS.', 'warn');
+    state.auto.running = false;
+    setAutoStatus('watching');
     return;
   }
+  // ── FIX: req_id MUST be a positive integer, not a string ──
+  const reqId = state.auto.reqCounter++;
+  state.auto.pendingReqId = reqId;
 
-  state.sessionStats.trades++;
-  document.getElementById('stat-trades').textContent = state.sessionStats.trades;
-  showToast(`✅ Contract #${buy.contract_id || buy.id} purchased!`, 'success');
+  wsSend({
+    proposal:          1,
+    req_id:            reqId,          // integer ✓
+    subscribe:         0,              // one-shot, not streaming
+    amount:            stake,
+    basis:             'stake',
+    contract_type:     contractType,
+    currency:          'USD',
+    underlying_symbol: symbol,
+    duration:          duration,
+    duration_unit:     't',
+  });
+}
 
-  const positionPayout = state.proposal?.payout || 0;
-  state.proposal = null; state.proposalId = null;
-  document.getElementById('buy-btn').disabled = true;
+function handleAutoProposal(proposal) {
+  state.auto.pendingReqId = null;
+  if (!proposal || !proposal.id) {
+    autoLog('Empty proposal received.', 'warn');
+    state.auto.running = false;
+    if (state.auto.status === 'trading') setAutoStatus('watching');
+    return;
+  }
+  const askPrice = parseFloat(proposal.ask_price || proposal.display_value || state.auto.currentStake);
+  autoLog('Proposal ok. Payout:$' + parseFloat(proposal.payout||0).toFixed(2) + '. Buying…', 'info');
+  wsSend({ buy: String(proposal.id), price: askPrice });
+}
 
+function handleAutoBuyResponse(buy) {
+  if (buy.error) {
+    autoLog('Buy error: ' + (buy.error.message || JSON.stringify(buy.error)), 'loss');
+    state.auto.running = false;
+    state.auto.pendingReqId = null;
+    if (state.auto.status === 'trading') setAutoStatus('watching');
+    return;
+  }
+  const contractId = String(buy.contract_id || buy.id || '');
+  state.auto.activeContractId = contractId;
+  autoLog('Contract #' + contractId + ' open. Awaiting result…', 'info');
+
+  // Track in positions tab
   const pos = {
-    id: buy.contract_id || buy.id,
-    type: document.getElementById('contract-type').value,
-    symbol: state.currentSymbol,
-    stake: parseFloat(document.getElementById('stake-input').value),
-    digit: state.selectedDigit,
-    duration: state.selectedDuration,
+    id: contractId,
+    type: buy.longcode ? (buy.longcode.includes('even') ? 'DIGITEVEN' : 'DIGITODD') : 'AUTO',
+    symbol: state.auto.activeSymbol || '—',
+    stake: state.auto.currentStake,
+    digit: '—',
+    duration: parseInt(document.getElementById('auto-duration').value) || 5,
     status: 'open',
     time: new Date().toLocaleTimeString(),
-    payout: positionPayout,
+    payout: parseFloat(buy.payout || 0),
   };
   state.positions.unshift(pos);
   renderPortfolio();
 
   if (buy.contract_id) wsSend({ proposal_open_contract: 1, contract_id: buy.contract_id, subscribe: 1 });
-  setTimeout(requestProposal, 500);
 }
 
-function handlePOC(poc) {
-  // Route to auto-trader handler if this is an auto contract
-  if (state.auto.activeContractId && String(poc.contract_id) === state.auto.activeContractId) {
-    handleAutoPOC(poc);
+function handleAutoPOC(poc) {
+  if (String(poc.contract_id) !== state.auto.activeContractId) return;
+  if (poc.status !== 'won' && poc.status !== 'lost') return;
+
+  const baseStake  = parseFloat(document.getElementById('auto-base-stake').value) || 0.35;
+  const mult       = parseFloat(document.getElementById('auto-martingale-mult').value) || 2;
+  const profit     = parseFloat(poc.profit || 0);
+  const wonStake   = state.auto.currentStake;
+
+  state.auto.sessionTrades++;
+  state.sessionStats.trades++;
+
+  if (poc.status === 'won') {
+    state.auto.sessionWins++;
+    state.sessionStats.wins++;
+    state.auto.sessionPnl   += profit;
+    state.sessionStats.pnl  += profit;
+    state.auto.currentStake  = baseStake;  // reset
+    autoLog('WON +$' + profit.toFixed(2)
+      + ' | P&L: ' + (state.auto.sessionPnl>=0?'+':'') + '$' + state.auto.sessionPnl.toFixed(2)
+      + ' | Stake reset → $' + baseStake.toFixed(2), 'win');
+    showToast('🏆 Won! +$' + profit.toFixed(2), 'success');
+  } else {
+    state.sessionStats.pnl  -= wonStake;
+    state.auto.sessionPnl   -= wonStake;
+    state.auto.currentStake  = parseFloat((wonStake * mult).toFixed(2));
+    autoLog('LOST -$' + wonStake.toFixed(2)
+      + ' | P&L: ' + (state.auto.sessionPnl>=0?'+':'') + '$' + state.auto.sessionPnl.toFixed(2)
+      + ' | Next stake × ' + mult + ' → $' + state.auto.currentStake.toFixed(2), 'loss');
+    showToast('❌ Lost -$' + wonStake.toFixed(2), 'error');
   }
+
+  state.auto.running = false;
+  state.auto.activeContractId = null;
+  updateAutoSessionDisplay();
+
+  // Update position status
   const pos = state.positions.find(p => String(p.id) === String(poc.contract_id));
-  if (!pos) return;
-  if (poc.status === 'won' || poc.status === 'lost') {
-    pos.status = poc.status;
-    if (poc.status === 'won') {
-      const profit = parseFloat(poc.profit || 0);
-      state.sessionStats.wins++;
-      state.sessionStats.pnl += profit;
-      showToast(`🏆 Won! +USD ${profit.toFixed(2)}`, 'success');
-    } else {
-      state.sessionStats.pnl -= pos.stake;
-      showToast(`❌ Lost  −USD ${pos.stake.toFixed(2)}`, 'error');
-    }
-    updateStats(); renderPortfolio(); addToStatement(pos, poc);
+  if (pos) { pos.status = poc.status; renderPortfolio(); addToStatement(pos, poc); }
+
+  // Check TP/SL after settlement
+  const tp = parseFloat(document.getElementById('auto-take-profit').value) || 5;
+  const sl = parseFloat(document.getElementById('auto-stop-loss').value) || 3;
+  if (state.auto.sessionPnl >= tp) { autoHitTP(); return; }
+  if (state.auto.sessionPnl <= -sl) { autoHitSL(); return; }
+
+  // Resume watching unless paused/stopped
+  if (state.auto.status === 'trading') setAutoStatus('watching');
+}
+
+function autoHitTP() {
+  autoStop();
+  const pnl = state.auto.sessionPnl;
+  setAutoStatus('stopped');
+  document.getElementById('auto-status-text').textContent = '🎯 Take profit hit! +$' + pnl.toFixed(2);
+  autoLog('Take profit reached! +$' + pnl.toFixed(2), 'win');
+  showToast('🎯 Take profit hit! +$' + pnl.toFixed(2), 'success');
+}
+function autoHitSL() {
+  autoStop();
+  const pnl = Math.abs(state.auto.sessionPnl);
+  setAutoStatus('stopped');
+  document.getElementById('auto-status-text').textContent = '🛑 Stop loss hit! -$' + pnl.toFixed(2);
+  autoLog('Stop loss reached! -$' + pnl.toFixed(2), 'loss');
+  showToast('🛑 Stop loss hit! -$' + pnl.toFixed(2), 'error');
+}
+
+function updateSymPatternBadge(symbol, buf) {
+  const el = document.getElementById('sym-' + symbol);
+  if (!el) return;
+  let badge = el.querySelector('.sym-pattern-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    el.querySelector('.sym-name').appendChild(badge);
   }
+  const pattern = buf.join('');
+  const isMatch = pattern === AUTO_PATTERNS.DIGITEVEN || pattern === AUTO_PATTERNS.DIGITODD;
+  badge.className = 'sym-pattern-badge' + (isMatch ? ' match' : '');
+  badge.textContent = buf.slice(-5).join('');
 }
 
 // ═══════════════════════════════════════════════
@@ -1471,10 +1578,10 @@ function renderPortfolio() {
       </div>
       <div class="pos-details">
         <div class="pos-detail"><div class="label">Type</div><div class="value">${p.type}</div></div>
-        <div class="pos-detail"><div class="label">Digit</div><div class="value">${p.digit}</div></div>
-        <div class="pos-detail"><div class="label">Stake</div><div class="value">USD ${p.stake.toFixed(2)}</div></div>
         <div class="pos-detail"><div class="label">Symbol</div><div class="value">${p.symbol}</div></div>
+        <div class="pos-detail"><div class="label">Stake</div><div class="value">USD ${p.stake.toFixed(2)}</div></div>
         <div class="pos-detail"><div class="label">Duration</div><div class="value">${p.duration}t</div></div>
+        <div class="pos-detail"><div class="label">Status</div><div class="value">${p.status}</div></div>
         <div class="pos-detail"><div class="label">Time</div><div class="value">${p.time}</div></div>
       </div>
     </div>
@@ -1526,7 +1633,7 @@ function handlePortfolio(portfolio) {
   const contracts = portfolio.contracts || [];
   contracts.forEach(c => {
     if (!state.positions.find(p => String(p.id) === String(c.contract_id))) {
-      state.positions.push({ id: c.contract_id, type: c.contract_type, symbol: c.underlying || c.symbol, stake: parseFloat(c.buy_price || 0), digit: c.barrier || '—', duration: '—', status: 'open', time: new Date(c.date_start * 1000).toLocaleTimeString(), payout: parseFloat(c.payout || 0) });
+      state.positions.push({ id: c.contract_id, type: c.contract_type, symbol: c.underlying || c.symbol, stake: parseFloat(c.buy_price || 0), digit: '—', duration: '—', status: 'open', time: new Date(c.date_start * 1000).toLocaleTimeString(), payout: parseFloat(c.payout || 0) });
     }
   });
   renderPortfolio();
@@ -1539,16 +1646,25 @@ function handleStatement(stmt) {
   renderStatement();
 }
 
-function updateStats() {
-  const pnl = state.sessionStats.pnl;
-  const pnlEl = document.getElementById('stat-pnl');
-  pnlEl.textContent = `${pnl >= 0 ? '+' : ''}USD ${pnl.toFixed(2)}`;
-  pnlEl.className = `stat-value ${pnl >= 0 ? 'green' : 'red'}`;
-  const wr = state.sessionStats.trades ? (state.sessionStats.wins / state.sessionStats.trades * 100).toFixed(0) : 0;
-  const wrEl = document.getElementById('stat-winrate');
-  wrEl.textContent = `${wr}%`;
-  wrEl.className = `stat-value ${wr >= 50 ? 'green' : 'red'}`;
-  document.getElementById('stat-trades').textContent = state.sessionStats.trades;
+function handlePOC(poc) {
+  // Route auto-trader POC
+  if (state.auto.activeContractId && String(poc.contract_id) === state.auto.activeContractId) {
+    handleAutoPOC(poc);
+    return;
+  }
+  // Generic settlement for non-auto contracts
+  const pos = state.positions.find(p => String(p.id) === String(poc.contract_id));
+  if (!pos) return;
+  if (poc.status === 'won' || poc.status === 'lost') {
+    pos.status = poc.status;
+    if (poc.status === 'won') {
+      state.sessionStats.wins++;
+      state.sessionStats.pnl += parseFloat(poc.profit || 0);
+    } else {
+      state.sessionStats.pnl -= pos.stake;
+    }
+    renderPortfolio(); addToStatement(pos, poc);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1565,9 +1681,6 @@ function switchTab(tab) {
   if (tab === 'statement') wsSend({ statement: 1, description: 1 });
 }
 
-function enableTradePanel() {}
-function disableTradePanel() { document.getElementById('buy-btn').disabled = true; }
-
 let toastTimer;
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');
@@ -1582,228 +1695,6 @@ function logout() {
   sessionStorage.removeItem('deriv_token_expiry');
   if (state.ws) state.ws.close();
   window.location.reload();
-}
-
-
-// ═══════════════════════════════════════════════
-// AUTO-TRADER
-// ═══════════════════════════════════════════════
-const AUTO_PATTERNS = {
-  DIGITEVEN: 'OEEEEOOOOE',   // O=odd,E=even → buy DIGITEVEN
-  DIGITODD:  'EOOOOEEEEO',   // → buy DIGITODD
-};
-
-function onAutoToggle() {
-  const cb = document.getElementById('auto-toggle');
-  const lbl = document.getElementById('auto-toggle-label');
-  state.auto.enabled = cb.checked;
-  lbl.textContent = cb.checked ? 'ON' : 'OFF';
-  if (cb.checked) {
-    state.auto.currentStake = parseFloat(document.getElementById('auto-base-stake').value) || 0.35;
-    state.auto.sessionPnl = 0;
-    state.auto.running = false;
-    state.auto.patternBuffers = {};
-    autoSubscribeAllSymbols();
-    setAutoStatus('watching', 'Watching all symbols for pattern…');
-    autoLog('Auto-trader started. Base stake: USD ' + state.auto.currentStake.toFixed(2), 'info');
-  } else {
-    setAutoStatus('idle', 'Idle — toggle to start watching');
-    autoLog('Auto-trader stopped.', 'warn');
-  }
-}
-
-function autoSubscribeAllSymbols() {
-  const allSymbols = [
-    '1HZ10V','1HZ25V','1HZ50V','1HZ75V','1HZ100V',
-    'JD10','JD25','JD50','JD75','JD100'
-  ];
-  allSymbols.forEach(sym => {
-    if (!state.auto.patternBuffers[sym]) state.auto.patternBuffers[sym] = [];
-    // Subscribe to ticks for each symbol if not already
-    wsSend({ ticks: sym, subscribe: 1 });
-  });
-}
-
-function setAutoStatus(dotClass, text) {
-  const dot = document.getElementById('auto-status-dot');
-  const txt = document.getElementById('auto-status-text');
-  if (!dot || !txt) return;
-  dot.className = 'auto-status-dot ' + dotClass;
-  txt.textContent = text;
-}
-
-function autoLog(msg, type='info') {
-  const log = document.getElementById('auto-log');
-  if (!log) return;
-  const entry = document.createElement('div');
-  const ts = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  entry.className = 'auto-log-entry ' + type;
-  entry.textContent = '[' + ts + '] ' + msg;
-  log.insertBefore(entry, log.firstChild);
-  while (log.children.length > 80) log.removeChild(log.lastChild);
-}
-
-function autoProcessTick(symbol, price) {
-  if (!state.auto.enabled) return;
-  if (state.auto.running) return;   // already in a trade, wait for settlement
-
-  const decimals = getDecimals(symbol);
-  const lastDigit = Math.round(Math.abs(price) * Math.pow(10, decimals)) % 10;
-  const eo = lastDigit % 2 === 0 ? 'E' : 'O';
-
-  if (!state.auto.patternBuffers[symbol]) state.auto.patternBuffers[symbol] = [];
-  const buf = state.auto.patternBuffers[symbol];
-  buf.push(eo);
-  if (buf.length > 10) buf.shift();
-
-  // Update visual badge on symbol row
-  updateSymPatternBadge(symbol, buf);
-
-  if (buf.length < 10) return;
-  const pattern = buf.join('');
-
-  let contractType = null;
-  if (pattern === AUTO_PATTERNS.DIGITEVEN) contractType = 'DIGITEVEN';
-  else if (pattern === AUTO_PATTERNS.DIGITODD)  contractType = 'DIGITODD';
-
-  if (!contractType) return;
-
-  // Check stop conditions before firing
-  const tp = parseFloat(document.getElementById('auto-take-profit').value) || 5;
-  const sl = parseFloat(document.getElementById('auto-stop-loss').value) || 3;
-  if (state.auto.sessionPnl >= tp) {
-    if (state.auto.enabled) {
-      document.getElementById('auto-toggle').checked = false;
-      onAutoToggle();
-      setAutoStatus('stopped', '🎯 Take profit hit! (+$' + state.auto.sessionPnl.toFixed(2) + ')');
-      autoLog('Take profit hit! Session P&L: +$' + state.auto.sessionPnl.toFixed(2), 'win');
-    }
-    return;
-  }
-  if (state.auto.sessionPnl <= -sl) {
-    if (state.auto.enabled) {
-      document.getElementById('auto-toggle').checked = false;
-      onAutoToggle();
-      setAutoStatus('stopped', '🛑 Stop loss hit! (-$' + Math.abs(state.auto.sessionPnl).toFixed(2) + ')');
-      autoLog('Stop loss hit! Session P&L: -$' + Math.abs(state.auto.sessionPnl).toFixed(2), 'loss');
-    }
-    return;
-  }
-
-  // FIRE TRADE
-  state.auto.running = true;
-  state.auto.activeSymbol = symbol;
-  state.auto.patternBuffers[symbol] = [];   // reset buffer for this symbol
-  const dur = parseInt(document.getElementById('auto-duration').value) || 5;
-  const stake = state.auto.currentStake;
-
-  autoLog('Pattern [' + pattern + '] on ' + symbol + ' → ' + contractType + ' @ $' + stake.toFixed(2), 'info');
-  setAutoStatus('trading', 'Trading ' + contractType + ' on ' + symbol + '…');
-
-  // Request proposal then buy
-  autoRequestAndBuy(symbol, contractType, stake, dur);
-}
-
-function autoRequestAndBuy(symbol, contractType, stake, duration) {
-  if (!state.wsAuthenticated || state.wsIsPublic) {
-    autoLog('Error: requires authenticated WS connection.', 'warn');
-    state.auto.running = false;
-    setAutoStatus('watching', 'Watching all symbols for pattern…');
-    return;
-  }
-  // Cancel any manual proposal first
-  if (state.proposalId) { wsSend({ forget: state.proposalId }); state.proposalId = null; }
-
-  const reqId = 'auto_' + Date.now();
-  state.auto.pendingProposalReqId = reqId;
-
-  const req = {
-    proposal: 1,
-    req_id: reqId,
-    amount: stake,
-    basis: 'stake',
-    contract_type: contractType,
-    currency: 'USD',
-    underlying_symbol: symbol,
-    duration: duration,
-    duration_unit: 't',
-  };
-  wsSend(req);
-}
-
-function handleAutoProposal(proposal, reqId) {
-  if (reqId !== state.auto.pendingProposalReqId) return; // stale
-  state.auto.pendingProposalReqId = null;
-  const askPrice = parseFloat(proposal.ask_price || proposal.display_value || state.auto.currentStake);
-  autoLog('Proposal received. Payout: $' + parseFloat(proposal.payout||0).toFixed(2) + '. Buying…', 'info');
-  wsSend({ buy: String(proposal.id), price: askPrice });
-}
-
-function handleAutoBuyResponse(buy) {
-  if (buy.error) {
-    autoLog('Buy error: ' + buy.error.message, 'loss');
-    state.auto.running = false;
-    setAutoStatus('watching', 'Watching all symbols for pattern…');
-    return;
-  }
-  state.auto.activeContractId = String(buy.contract_id || buy.id);
-  autoLog('Contract #' + state.auto.activeContractId + ' opened. Waiting for settlement…', 'info');
-  // Subscribe to POC
-  if (buy.contract_id) wsSend({ proposal_open_contract: 1, contract_id: buy.contract_id, subscribe: 1 });
-}
-
-function handleAutoPOC(poc) {
-  if (String(poc.contract_id) !== state.auto.activeContractId) return;
-  if (poc.status !== 'won' && poc.status !== 'lost') return;
-
-  const baseStake = parseFloat(document.getElementById('auto-base-stake').value) || 0.35;
-  const profit = parseFloat(poc.profit || 0);
-
-  if (poc.status === 'won') {
-    state.auto.sessionPnl += profit;
-    state.auto.currentStake = baseStake;  // reset martingale
-    autoLog('WON +$' + profit.toFixed(2) + ' | Session: ' + (state.auto.sessionPnl>=0?'+':'') + '$' + state.auto.sessionPnl.toFixed(2) + ' | Stake reset to $' + baseStake.toFixed(2), 'win');
-  } else {
-    state.auto.sessionPnl -= state.auto.currentStake;
-    state.auto.currentStake = parseFloat((state.auto.currentStake * 2).toFixed(2));  // martingale
-    autoLog('LOST -$' + state.auto.currentStake/2 + ' | Session: ' + (state.auto.sessionPnl>=0?'+':'') + '$' + state.auto.sessionPnl.toFixed(2) + ' | Next stake: $' + state.auto.currentStake.toFixed(2), 'loss');
-  }
-
-  state.auto.running = false;
-  state.auto.activeContractId = null;
-
-  // Check stop conditions after settlement
-  const tp = parseFloat(document.getElementById('auto-take-profit').value) || 5;
-  const sl = parseFloat(document.getElementById('auto-stop-loss').value) || 3;
-  if (state.auto.sessionPnl >= tp) {
-    document.getElementById('auto-toggle').checked = false;
-    onAutoToggle();
-    setAutoStatus('stopped', '🎯 Take profit reached! +$' + state.auto.sessionPnl.toFixed(2));
-    return;
-  }
-  if (state.auto.sessionPnl <= -sl) {
-    document.getElementById('auto-toggle').checked = false;
-    onAutoToggle();
-    setAutoStatus('stopped', '🛑 Stop loss reached! -$' + Math.abs(state.auto.sessionPnl).toFixed(2));
-    return;
-  }
-
-  setAutoStatus('watching', 'Watching all symbols for pattern…');
-}
-
-function updateSymPatternBadge(symbol, buf) {
-  const el = document.getElementById('sym-' + symbol);
-  if (!el) return;
-  let badge = el.querySelector('.sym-pattern-badge');
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.className = 'sym-pattern-badge';
-    el.querySelector('.sym-name').appendChild(badge);
-  }
-  const pattern = buf.join('');
-  const isMatch = pattern === AUTO_PATTERNS.DIGITEVEN || pattern === AUTO_PATTERNS.DIGITODD;
-  badge.className = 'sym-pattern-badge' + (isMatch ? ' match' : '');
-  badge.textContent = buf.slice(-5).join('');  // show last 5 chars
 }
 
 // ═══════════════════════════════════════════════
