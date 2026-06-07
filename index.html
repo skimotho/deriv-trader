@@ -144,17 +144,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .digit-table td{padding:3px 5px;text-align:center;color:var(--text2);border-bottom:1px solid var(--border);}
 .digit-table tr:last-child td{border-bottom:none;}
 .digit-table td.digit-num{color:var(--text);font-weight:600;font-size:12px;}
-.digit-table td.best-odd{color:var(--accent);font-weight:700;background:var(--accent-glow);border-radius:3px;}
-.digit-table td.best-even{color:var(--accent2);font-weight:700;background:var(--accent2-glow);border-radius:3px;}
-.digit-table tr.row-odd-trigger td.digit-num{background:rgba(59,130,246,.08);}
-.digit-table tr.row-even-trigger td.digit-num{background:rgba(249,115,22,.08);}
+.digit-table td.best-over4{color:var(--accent);font-weight:700;background:var(--accent-glow);border-radius:3px;}
+.digit-table td.best-under5{color:var(--accent2);font-weight:700;background:var(--accent2-glow);border-radius:3px;}
+.digit-table tr.row-over4-trigger td.digit-num{background:rgba(59,130,246,.08);}
+.digit-table tr.row-under5-trigger td.digit-num{background:rgba(249,115,22,.08);}
 /* Sides */
 .sym-sides{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
 .sym-side{padding:8px 10px;}
 .sym-side:first-child{border-right:1px solid var(--border);}
 .sym-side-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
-.sym-side.odd .sym-side-title{color:var(--accent);}
-.sym-side.even .sym-side-title{color:var(--accent2);}
+.sym-side.over4 .sym-side-title{color:var(--accent);}
+.sym-side.under5 .sym-side-title{color:var(--accent2);}
 .sym-side-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);}
 .sym-side-stats span.g{color:var(--green);}
 .sym-side-stats span.r{color:var(--red);}
@@ -172,7 +172,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .hist-table th{position:sticky;top:0;z-index:1;background:var(--surface2);padding:5px 6px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);text-align:left;}
 .hist-table td{padding:5px 6px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border);}
 .hist-table tr:last-child td{border-bottom:none;}
-.hist-type-odd{color:var(--accent);font-weight:500;}.hist-type-even{color:var(--accent2);font-weight:500;}
+.hist-type-over4{color:var(--accent);font-weight:500;}.hist-type-under5{color:var(--accent2);font-weight:500;}
 .hist-win{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2);border-radius:3px;padding:1px 5px;display:inline-block;font-size:10px;}
 .hist-loss{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2);border-radius:3px;padding:1px 5px;display:inline-block;font-size:10px;}
 .hist-empty{text-align:center;padding:20px 0;color:var(--text3);font-size:11px;}
@@ -182,15 +182,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 /* ── UI Improvement 1: Digit frequency bar overlay ── */
 .digit-bar-wrap{position:relative;display:inline-block;width:100%;}
 .digit-bar-bg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:12px;border-radius:2px;opacity:.18;pointer-events:none;transition:width .3s ease;}
-.digit-bar-bg.odd-bar{background:var(--accent);}
-.digit-bar-bg.even-bar{background:var(--accent2);}
+.digit-bar-bg.over4-bar{background:var(--accent);}
+.digit-bar-bg.under5-bar{background:var(--accent2);}
 .digit-table td.freq-cell{position:relative;min-width:36px;}
 
 /* ── UI Improvement 2: Digit tape strip ── */
 .sym-tape{padding:5px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:3px;overflow:hidden;min-height:28px;}
 .tape-digit{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0;transition:opacity .2s;}
-.tape-digit.even{background:var(--accent2-glow);color:var(--accent2);border:1px solid rgba(249,115,22,.25);}
-.tape-digit.odd{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(59,130,246,.25);}
+.tape-digit.under5{background:var(--accent2-glow);color:var(--accent2);border:1px solid rgba(249,115,22,.25);}
+.tape-digit.over4{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(59,130,246,.25);}
 .tape-digit.latest{box-shadow:0 0 6px currentColor;opacity:1!important;}
 
 /* ── UI Improvement 3: Win-rate mini donut ── */
@@ -476,10 +476,10 @@ function makeSymState(sym) {
     maxUnderDigits: [],
     pipSize: 0,
     // per-side martingale
-    pendingOdd:  null,
-    pendingEven: null,
-    oddList: [], evenList: [],
-    oddW: 0, oddL: 0, evenW: 0, evenL: 0,
+    pendingOver4: null,
+    pendingUnder5: null,
+    over4List: [], under5List: [],
+    over4W: 0, over4L: 0, under5W: 0, under5L: 0,
     // per-symbol P&L
     symPL: 0,
     // tracking maps
@@ -569,23 +569,23 @@ function buildSymCards() {
           </div>
         </div>
         <div class="sym-sides">
-          <div class="sym-side odd">
-            <div class="sym-side-title">DIGITOVER4 <span id="op-${sym}"></span></div>
+          <div class="sym-side over4">
+            <div class="sym-side-title">DIGITOVER4 <span id="over4p-${sym}"></span></div>
             <div class="sym-side-stats">
               <span>Stake</span><span>W / L</span>
-              <span class="sym-side-stake" id="os-${sym}">${initStake.toFixed(2)}</span>
-              <span><span class="g" id="ow-${sym}">0</span>/<span class="r" id="ol-${sym}">0</span></span>
+              <span class="sym-side-stake" id="over4s-${sym}">${initStake.toFixed(2)}</span>
+              <span><span class="g" id="over4w-${sym}">0</span>/<span class="r" id="over4l-${sym}">0</span></span>
             </div>
-            <div class="sym-chips" id="oc-${sym}"><span class="chip-empty">empty</span></div>
+            <div class="sym-chips" id="over4c-${sym}"><span class="chip-empty">empty</span></div>
           </div>
-          <div class="sym-side even">
-            <div class="sym-side-title">DIGITUNDER5 <span id="ep-${sym}"></span></div>
+          <div class="sym-side under5">
+            <div class="sym-side-title">DIGITUNDER5 <span id="under5p-${sym}"></span></div>
             <div class="sym-side-stats">
               <span>Stake</span><span>W / L</span>
-              <span class="sym-side-stake" id="es-${sym}">${initStake.toFixed(2)}</span>
-              <span><span class="g" id="ew-${sym}">0</span>/<span class="r" id="el-${sym}">0</span></span>
+              <span class="sym-side-stake" id="under5s-${sym}">${initStake.toFixed(2)}</span>
+              <span><span class="g" id="under5w-${sym}">0</span>/<span class="r" id="under5l-${sym}">0</span></span>
             </div>
-            <div class="sym-chips" id="ec-${sym}"><span class="chip-empty">empty</span></div>
+            <div class="sym-chips" id="under5c-${sym}"><span class="chip-empty">empty</span></div>
           </div>
         </div>
 
@@ -1100,16 +1100,16 @@ function onTick(msg) {
   recomputeThresholdDigits(sym);
 
   // Predetermine pending results
-  if (s.pendingOdd  && !s.pendingOdd.settled)  predetermineResult(sym,'ODD',  d<5,  d);
-  if (s.pendingEven && !s.pendingEven.settled)  predetermineResult(sym,'EVEN', d>4, d);
+  if (s.pendingOver4  && !s.pendingOver4.settled)  predetermineResult(sym,'OVER4',  d<5,  d);
+  if (s.pendingUnder5 && !s.pendingUnder5.settled)  predetermineResult(sym,'UNDER5', d>4, d);
 
   const dOverStreakMet  = s.digitOverCount[d]  >= triggerThreshold;
   const dUnderStreakMet = s.digitUnderCount[d] >= triggerThreshold;
   const triggerUnder = dOverStreakMet  && s.maxOverDigits.length  >= digitCounterFilter;
   const triggerOver  = dUnderStreakMet && s.maxUnderDigits.length >= digitCounterFilter;
 
-  if (triggerUnder) { addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'EVEN'); }
-  if (triggerOver)  { addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxUnderDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'ODD');  }
+  if (triggerUnder) { addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'UNDER5'); }
+  if (triggerOver)  { addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxUnderDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'OVER4');  }
 
   updateTriggerInfo(sym,d,triggerOver,triggerUnder);
 }
@@ -1130,18 +1130,18 @@ function placeSide(sym, side) {
   if (balance===null) return;
   readSettings();
   const s = S[sym];
-  const list = side==='ODD' ? s.oddList : s.evenList;
+  const list = side==='OVER4' ? s.over4List : s.under5List;
   const stake = +(calcStake(list).toFixed(2));
   if (stake>balance) { alert2('Insufficient balance for '+sym+' '+side+'. Bot paused.'); pauseBot(); return; }
-  const contractType = side==='ODD' ? 'DIGITOVER' : 'DIGITUNDER';
-  const barrier      = side==='ODD' ? '4' : '5';
+  const contractType = side==='OVER4' ? 'DIGITOVER' : 'DIGITUNDER';
+  const barrier      = side==='OVER4' ? '4' : '5';
   const rid = nextRid();
   s.buyCbs[rid] = (cid) => {
     const pendObj = {cid, stake, settled:false};
-    if (side==='ODD')  { s.pendingOdd=pendObj;  g('op-'+sym).innerHTML='<span class="pend-dot"></span>'; }
-    else               { s.pendingEven=pendObj; g('ep-'+sym).innerHTML='<span class="pend-dot"></span>'; }
+    if (side==='OVER4')  { s.pendingOver4=pendObj;  g('over4p-'+sym).innerHTML='<span class="pend-dot"></span>'; }
+    else               { s.pendingUnder5=pendObj; g('under5p-'+sym).innerHTML='<span class="pend-dot"></span>'; }
     s.cidSide[cid]=side; s.cidStake[cid]=stake; s.cidPrediction[cid]=null;
-    addLog('['+sym+'] ✓ '+contractType+(side==='ODD'?'4':'5')+' bought #'+cid+' stake='+stake.toFixed(2),'ok');
+    addLog('['+sym+'] ✓ '+contractType+(side==='OVER4'?'4':'5')+' bought #'+cid+' stake='+stake.toFixed(2),'ok');
   };
   wsSendBuy(sym, contractType, barrier, stake, rid);
   updateSymSides(sym);
@@ -1160,7 +1160,7 @@ function wsSendBuy(sym, type, barrier, stake, rid) {
 // ── Predetermine ──────────────────────────────────────────────────────────────
 function predetermineResult(sym, side, won, digit) {
   const s = S[sym];
-  const pend = side==='ODD' ? s.pendingOdd : s.pendingEven;
+  const pend = side==='OVER4' ? s.pendingOver4 : s.pendingUnder5;
   if (!pend||pend.settled) return;
   pend.settled=true;
   if (pend.cid) s.cidPrediction[pend.cid]=won;
@@ -1169,14 +1169,14 @@ function predetermineResult(sym, side, won, digit) {
   totalPL=parseFloat((totalPL+profit).toFixed(2));
   s.symPL=parseFloat((s.symPL+profit).toFixed(2));
   updateBotDD();
-  if (side==='ODD') {
-    if (won){ s.oddW++; wins++; s.oddList=[]; addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'OVER','WIN',stake,stake+profit,profit,true); }
-    else    { s.oddL++; losses++; s.oddList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
-    g('op-'+sym).innerHTML=''; s.pendingOdd=null;
+  if (side==='OVER4') {
+    if (won){ s.over4W++; wins++; s.over4List=[]; addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'OVER','WIN',stake,stake+profit,profit,true); }
+    else    { s.over4L++; losses++; s.over4List.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
+    g('over4p-'+sym).innerHTML=''; s.pendingOver4=null;
   } else {
-    if (won){ s.evenW++; wins++; s.evenList=[]; addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'UNDER','WIN',stake,stake+profit,profit,true); }
-    else    { s.evenL++; losses++; s.evenList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
-    g('ep-'+sym).innerHTML=''; s.pendingEven=null;
+    if (won){ s.under5W++; wins++; s.under5List=[]; addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'UNDER','WIN',stake,stake+profit,profit,true); }
+    else    { s.under5L++; losses++; s.under5List.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
+    g('under5p-'+sym).innerHTML=''; s.pendingUnder5=null;
   }
   updateSymSides(sym); updateKPIs(); checkTPSL();
 }
@@ -1236,12 +1236,12 @@ function reviseResult(sym, side, stake, won) {
   totalPL=parseFloat((totalPL-wrongProfit+correctProfit).toFixed(2));
   s.symPL=parseFloat((s.symPL-wrongProfit+correctProfit).toFixed(2));
   updateBotDD();
-  if (side==='ODD') {
-    if (won){ s.oddL--; losses--; s.oddW++; wins++; if(s.oddList.length) s.oddList.pop(); }
-    else    { s.oddW--; wins--; s.oddL++; losses++; s.oddList.push(stake); }
+  if (side==='OVER4') {
+    if (won){ s.over4L--; losses--; s.over4W++; wins++; if(s.over4List.length) s.over4List.pop(); }
+    else    { s.over4W--; wins--; s.over4L++; losses++; s.over4List.push(stake); }
   } else {
-    if (won){ s.evenL--; losses--; s.evenW++; wins++; if(s.evenList.length) s.evenList.pop(); }
-    else    { s.evenW--; wins--; s.evenL++; losses++; s.evenList.push(stake); }
+    if (won){ s.under5L--; losses--; s.under5W++; wins++; if(s.under5List.length) s.under5List.pop(); }
+    else    { s.under5W--; wins--; s.under5L++; losses++; s.under5List.push(stake); }
   }
   updateSymSides(sym); updateKPIs(); checkTPSL();
 }
@@ -1278,10 +1278,10 @@ function readSettings() {
 function doStart() {
   SYMBOLS.forEach(sym=>{
     const s=S[sym];
-    s.oddList=[]; s.evenList=[]; s.oddW=0; s.oddL=0; s.evenW=0; s.evenL=0;
-    s.pendingOdd=null; s.pendingEven=null; s.settledCids.clear();
+    s.over4List=[]; s.under5List=[]; s.over4W=0; s.over4L=0; s.under5W=0; s.under5L=0;
+    s.pendingOver4=null; s.pendingUnder5=null; s.settledCids.clear();
     s.symPL=0;
-    g('op-'+sym).innerHTML=''; g('ep-'+sym).innerHTML='';
+    g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
   });
   wins=0; losses=0; totalPL=0; maxDD=0; startBal=balance;
   readSettings(); hideAlert(); updateKPIs(); lockCfg(true);
@@ -1315,8 +1315,8 @@ function doPause() {
 function pauseBot() {
   setStatus('paused'); addLog('Bot PAUSED.','warn');
   SYMBOLS.forEach(sym=>{
-    S[sym].pendingOdd=null; S[sym].pendingEven=null;
-    g('op-'+sym).innerHTML=''; g('ep-'+sym).innerHTML='';
+    S[sym].pendingOver4=null; S[sym].pendingUnder5=null;
+    g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
     unsubscribeFromTicks(sym);
   });
 }
@@ -1324,8 +1324,8 @@ function doStop() {
   if (reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;} reconnectAttempts=0;
   setStatus('stopped');
   SYMBOLS.forEach(sym=>{
-    S[sym].pendingOdd=null; S[sym].pendingEven=null;
-    g('op-'+sym).innerHTML=''; g('ep-'+sym).innerHTML='';
+    S[sym].pendingOver4=null; S[sym].pendingUnder5=null;
+    g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
     unsubscribeFromTicks(sym);
   });
   wsSend({forget_all:'proposal_open_contract'});
@@ -1399,17 +1399,17 @@ function renderDigitTable(sym){
   for(let d=0;d<10;d++){
     const isOver=s.maxOverDigits.includes(d), isUnder=s.maxUnderDigits.includes(d);
     const tr=document.createElement('tr');
-    if(isOver&&isUnder) tr.className='row-odd-trigger';
-    else if(isOver)     tr.className='row-odd-trigger';
-    else if(isUnder)    tr.className='row-even-trigger';
+    if(isOver&&isUnder) tr.className='row-over4-trigger';
+    else if(isOver)     tr.className='row-over4-trigger';
+    else if(isUnder)    tr.className='row-under5-trigger';
     const underPct = s.digitTotal[d]>0 ? Math.round((s.digitUnderCount[d] / Math.max(1,...s.digitUnderCount)) * 100) : 0;
     const overPct  = s.digitTotal[d]>0 ? Math.round((s.digitOverCount[d]  / Math.max(1,...s.digitOverCount))  * 100) : 0;
     tr.innerHTML=
       '<td class="digit-num">'+(isOver||isUnder?'▶ ':'')+d+'</td>'+
-      '<td class="freq-cell '+(isUnder?'best-even':'')+'">'+
-        '<div class="digit-bar-wrap"><div class="digit-bar-bg even-bar" style="width:'+underPct+'%"></div>'+s.digitUnderCount[d]+'</div></td>'+
-      '<td class="freq-cell '+(isOver?'best-odd':'')+'">'+
-        '<div class="digit-bar-wrap"><div class="digit-bar-bg odd-bar" style="width:'+overPct+'%"></div>'+s.digitOverCount[d]+'</div></td>'+
+      '<td class="freq-cell '+(isUnder?'best-under5':'')+'">'+
+        '<div class="digit-bar-wrap"><div class="digit-bar-bg under5-bar" style="width:'+underPct+'%"></div>'+s.digitUnderCount[d]+'</div></td>'+
+      '<td class="freq-cell '+(isOver?'best-over4':'')+'">'+
+        '<div class="digit-bar-wrap"><div class="digit-bar-bg over4-bar" style="width:'+overPct+'%"></div>'+s.digitOverCount[d]+'</div></td>'+
       '<td>'+s.digitTotal[d]+'</td>';
     tbody.appendChild(tr);
   }
@@ -1435,7 +1435,7 @@ function updateTape(sym, d) {
   if (prev) prev.classList.remove('latest');
   // prepend new digit
   const span = document.createElement('span');
-  span.className = 'tape-digit '+(isOver?'odd':'even')+' latest';
+  span.className = 'tape-digit '+(isOver?'over4':'under5')+' latest';
   span.textContent = d;
   tape.insertBefore(span, tape.firstChild);
   // trim overflow
@@ -1448,13 +1448,13 @@ function updateTape(sym, d) {
 
 function updateSymSides(sym){
   const s=S[sym];
-  g('os-'+sym).textContent=calcStake(s.oddList).toFixed(2);
-  g('es-'+sym).textContent=calcStake(s.evenList).toFixed(2);
-  g('ow-'+sym).textContent=s.oddW; g('ol-'+sym).textContent=s.oddL;
-  g('ew-'+sym).textContent=s.evenW; g('el-'+sym).textContent=s.evenL;
+  g('over4s-'+sym).textContent=calcStake(s.over4List).toFixed(2);
+  g('under5s-'+sym).textContent=calcStake(s.under5List).toFixed(2);
+  g('over4w-'+sym).textContent=s.over4W; g('over4l-'+sym).textContent=s.over4L;
+  g('under5w-'+sym).textContent=s.under5W; g('under5l-'+sym).textContent=s.under5L;
   // chips
-  const oc=g('oc-'+sym); oc.innerHTML=s.oddList.length?s.oddList.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
-  const ec=g('ec-'+sym); ec.innerHTML=s.evenList.length?s.evenList.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
+  const oc=g('over4c-'+sym); oc.innerHTML=s.over4List.length?s.over4List.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
+  const ec=g('under5c-'+sym); ec.innerHTML=s.under5List.length?s.under5List.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
   // per-symbol P&L
   const plEl=g('spl-'+sym);
   plEl.textContent=(s.symPL>=0?'+':'')+s.symPL.toFixed(2);
@@ -1463,7 +1463,7 @@ function updateSymSides(sym){
   const cpl=g('cpl-'+sym);
   if(cpl){ cpl.textContent=(s.symPL>=0?'+':'')+s.symPL.toFixed(2); cpl.className='sym-collapsed-pl '+(s.symPL>=0?'pos':'neg'); }
   // win-rate donut (combined W/L across both sides)
-  const tw=s.oddW+s.evenW, tl=s.oddL+s.evenL, total=tw+tl;
+  const tw=s.over4W+s.under5W, tl=s.over4L+s.under5L, total=tw+tl;
   const wd=g('wd-'+sym), wdl=g('wdl-'+sym);
   if(wd&&total>0){
     const pct=tw/total;
@@ -1476,7 +1476,7 @@ function updateSymSides(sym){
 
 function addHistory(sym,side,result,stake,payout,profit,predicted){
   const t=new Date().toTimeString().slice(0,8);
-  const tc=side==='OVER'?'hist-type-odd':'hist-type-even';
+  const tc=side==='OVER'?'hist-type-over4':'hist-type-under5';
   const sh=result==='WIN'?'<span class="hist-win">'+(predicted?'~':'')+'WIN</span>':'<span class="hist-loss">'+(predicted?'~':'')+'LOSS</span>';
   
   // Per-symbol history removed as requested.
