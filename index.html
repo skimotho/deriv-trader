@@ -252,7 +252,7 @@ body {
 .tab-content.active { display: block; }
 
 /* ── STATS ROW ── */
-.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.stats-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 20px; }
 .stat-card {
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-r);
   padding: 16px 18px; transition: border-color var(--tr); position: relative; overflow: hidden;
@@ -648,20 +648,19 @@ body {
           <div class="stat-label">Trades</div>
           <div class="stat-value mono" id="stat-trades">0</div>
         </div>
-      </div>
-
-      <div class="tick-display" id="tick-display" style="display:none;">
-        <div class="tick-header">
-          <span class="tick-symbol-badge" id="tick-symbol-name">—</span>
-          <span class="tick-price flat" id="tick-price-display">—</span>
-          <span class="tick-change" id="tick-change-badge" style="display:none;"></span>
+        <div class="stat-card">
+          <div class="stat-label">Max Drawdown</div>
+          <div class="stat-value red" id="stat-maxdd">$0.00</div>
         </div>
-        <div class="tick-tape" id="tick-tape"></div>
       </div>
 
-      <div id="no-symbol-msg" class="notice info">
-        ← Select a market from the sidebar to view live ticks and start trading.
-      </div>
+      <!-- hidden elements kept for JS compatibility -->
+      <span id="tick-symbol-name" style="display:none;"></span>
+      <span id="tick-price-display" style="display:none;"></span>
+      <span id="tick-change-badge" style="display:none;"></span>
+      <div id="tick-tape" style="display:none;"></div>
+      <div id="last-digits-history" style="display:none;"></div>
+      <div id="no-symbol-msg" style="display:none;"></div>
     </div>
 
     <!-- POSITIONS TAB -->
@@ -698,7 +697,7 @@ body {
       </div>
 
       <!-- SESSION STATS STRIP -->
-      <div class="auto-stats-strip">
+      <div class="auto-stats-strip" style="grid-template-columns:repeat(2,1fr);">
         <div class="auto-stat">
           <div class="auto-stat-label">Session P&L</div>
           <div class="auto-stat-value" id="auto-pnl-display">$0.00</div>
@@ -711,6 +710,19 @@ body {
           <div class="auto-stat-label">Win Rate</div>
           <div class="auto-stat-value" id="auto-wr-display">—</div>
         </div>
+        <div class="auto-stat">
+          <div class="auto-stat-label">Max Drawdown</div>
+          <div class="auto-stat-value red" id="auto-maxdd-display">$0.00</div>
+        </div>
+      </div>
+
+      <!-- FORCE RESUME (shown when stuck in trading/open) -->
+      <div id="force-resume-row" style="display:none;margin-bottom:8px;">
+        <button class="auto-btn" id="btn-force-resume" onclick="forceResume()"
+          style="width:100%;background:linear-gradient(135deg,#7c3aed,var(--accent));color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(99,102,241,0.35);">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Force Resume (stuck?)
+        </button>
       </div>
 
       <!-- CONTROL BUTTONS -->
@@ -852,11 +864,14 @@ let state = {
     sessionPnl: 0,
     sessionTrades: 0,
     sessionWins: 0,
+    maxDrawdown: 0,        // worst peak-to-trough drop this session
+    peakPnl: 0,            // highest sessionPnl seen so far
     patternBuffers: {},    // symbol → ['E','O',…] last 10
     activeSymbol: null,
     activeContractId: null,
     pendingReqId: null,    // integer req_id for pending auto proposal
     reqCounter: 1,         // monotonic integer counter for req_id
+    tradeWatchdogTimer: null, // safety timer — forces resume if POC never arrives
   },
 };
 
@@ -1291,6 +1306,39 @@ function autoStop() {
     '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause';
 }
 
+// ── Force-resume when stuck on an open contract ──
+function forceResume() {
+  clearAutoWatchdog();
+  state.auto.running = false;
+  state.auto.activeContractId = null;
+  state.auto.pendingReqId = null;
+  autoLog('Force-resumed — contract result unknown. Returning to watching.', 'warn');
+  showToast('⚠️ Force-resumed from stuck OPEN trade', 'info');
+  document.getElementById('force-resume-row').style.display = 'none';
+  if (['trading', 'paused', 'watching'].includes(state.auto.status)) {
+    setAutoStatus('watching');
+  }
+}
+
+function startAutoWatchdog(seconds) {
+  clearAutoWatchdog();
+  state.auto.tradeWatchdogTimer = setTimeout(() => {
+    if (state.auto.status === 'trading') {
+      autoLog('⏱ Watchdog: no settlement after ' + seconds + 's — forcing resume.', 'warn');
+      showToast('⏱ Trade timeout — auto-resuming', 'info');
+      document.getElementById('force-resume-row').style.display = 'none';
+      forceResume();
+    }
+  }, seconds * 1000);
+}
+
+function clearAutoWatchdog() {
+  if (state.auto.tradeWatchdogTimer) {
+    clearTimeout(state.auto.tradeWatchdogTimer);
+    state.auto.tradeWatchdogTimer = null;
+  }
+}
+
 function setAutoStatus(status) {
   state.auto.status = status;
   const dot = document.getElementById('auto-status-dot');
@@ -1314,6 +1362,17 @@ function setAutoStatus(status) {
   btnStart.disabled = isActive;
   btnPause.disabled = !isActive;
   btnStop.disabled  = !isActive;
+
+  // Show force-resume button when stuck in trading state
+  const frRow = document.getElementById('force-resume-row');
+  if (frRow) frRow.style.display = status === 'trading' ? 'block' : 'none';
+
+  // Start/clear watchdog on trading state (30s timeout)
+  if (status === 'trading') {
+    startAutoWatchdog(30);
+  } else {
+    clearAutoWatchdog();
+  }
 }
 
 function setConfigLocked(locked) {
@@ -1504,6 +1563,16 @@ function handleAutoPOC(poc) {
 
   state.auto.running = false;
   state.auto.activeContractId = null;
+
+  // ── Max Drawdown tracking ──
+  if (state.auto.sessionPnl > state.auto.peakPnl) {
+    state.auto.peakPnl = state.auto.sessionPnl;
+  }
+  const drawdown = state.auto.peakPnl - state.auto.sessionPnl;
+  if (drawdown > state.auto.maxDrawdown) {
+    state.auto.maxDrawdown = drawdown;
+  }
+
   updateAutoSessionDisplay();
 
   // Update position status
