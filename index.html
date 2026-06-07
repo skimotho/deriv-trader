@@ -1100,8 +1100,8 @@ function onTick(msg) {
   recomputeThresholdDigits(sym);
 
   // Predetermine pending results
-  if (s.pendingOver4  && !s.pendingOver4.settled)  predetermineResult(sym,'OVER4',  d<5,  d);
-  if (s.pendingUnder5 && !s.pendingUnder5.settled)  predetermineResult(sym,'UNDER5', d>4, d);
+  if (s.pendingOver4  && !s.pendingOver4.settled)  predetermineResult(sym,'OVER4',  d>4,  d);
+  if (s.pendingUnder5 && !s.pendingUnder5.settled)  predetermineResult(sym,'UNDER5', d<5, d);
 
   const dOverStreakMet  = s.digitOverCount[d]  >= triggerThreshold;
   const dUnderStreakMet = s.digitUnderCount[d] >= triggerThreshold;
