@@ -482,6 +482,8 @@ function makeSymState(sym) {
     // per-tick fire guards — true if a contract was already opened this tick
     firedOver4ThisTick:  false,
     firedUnder5ThisTick: false,
+    // epoch dedup — reject duplicate tick messages for the same epoch
+    lastProcessedEpoch: null,
     over4W: 0, over4L: 0, under5W: 0, under5L: 0,
     // per-symbol P&L
     symPL: 0,
@@ -870,8 +872,8 @@ function openWebSocket(wsUrl, selAcct) {
     wsSend({balance:1,subscribe:1});
     wsSend({transaction:1,subscribe:1});
     if (botState==='idle') {
-      addLog('Fetching initial history and subscribing to live ticks for all symbols…','info');
-      SYMBOLS.forEach(sym => { seedFromHistory(sym); subscribeToTicks(sym); });
+      addLog('Fetching initial history for all symbols (live ticks via history subscription)…','info');
+      SYMBOLS.forEach(sym => { seedFromHistory(sym); });
     } else if (botState==='reconnecting'||botState==='running'||botState==='seeding') {
       addLog('Resuming bot after reconnect — re-seeding all symbols…','warn');
       setStatus('seeding');
@@ -881,7 +883,7 @@ function openWebSocket(wsUrl, selAcct) {
         s.digitOverCount.fill(0); s.digitUnderCount.fill(0); s.digitTotal.fill(0);
         s.maxOverDigits=[]; s.maxUnderDigits=[];
         s.historySeeded=false; s.tickSubId=null;
-        seedFromHistory(sym); subscribeToTicks(sym);
+        seedFromHistory(sym);
       });
     }
   };
@@ -1086,6 +1088,10 @@ function onTick(msg) {
   const s = S[sym];
   if (msg.subscription&&msg.subscription.id) s.tickSubId=msg.subscription.id;
   const q=tick.quote, epo=tick.epoch;
+
+  // Epoch deduplication — silently drop duplicate tick messages for the same epoch
+  if (epo && epo === s.lastProcessedEpoch) return;
+  s.lastProcessedEpoch = epo;
   const d=lastDigitOf(q,s.pipSize);
   g('tv-'+sym).textContent  = q;
   g('td-'+sym).textContent  = 'last digit: '+d;
@@ -1327,6 +1333,7 @@ function doStart() {
     s.over4W=0; s.over4L=0; s.under5W=0; s.under5L=0;
     s.pendingOver4=[]; s.pendingUnder5=[]; s.settledCids.clear();
     s.firedOver4ThisTick=false; s.firedUnder5ThisTick=false;
+    s.lastProcessedEpoch=null;
     s.symPL=0;
     g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
   });
@@ -1355,7 +1362,7 @@ function doPause() {
       const s=S[sym];
       s.digitHistory=[]; s.prevDigit=null; s.digitOverCount.fill(0); s.digitUnderCount.fill(0); s.digitTotal.fill(0);
       s.historySeeded=false;
-      renderSeedUI(sym); seedFromHistory(sym); subscribeToTicks(sym);
+      renderSeedUI(sym); seedFromHistory(sym);
     });
   } else { pauseBot(); }
   refreshBtns();
