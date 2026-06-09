@@ -478,7 +478,6 @@ function makeSymState(sym) {
     // per-side martingale
     pendingOver4: null,
     pendingUnder5: null,
-    over4List: [], under5List: [],
     over4W: 0, over4L: 0, under5W: 0, under5L: 0,
     // per-symbol P&L
     symPL: 0,
@@ -506,6 +505,7 @@ let botState = 'idle';
 let currency = 'USD', initStake = 0.35, mFactor = 1.3, tpTarget = 15000, slTarget = 50000;
 let triggerThreshold = 3, digitCounterFilter = 2;
 let balance = null, startBal = null, totalPL = 0, maxDD = 0, wins = 0, losses = 0;
+let lossList = []; // single global loss list shared across all symbols and sides
 let reconnectAttempts = 0, reconnectTimer = null;
 let oauthAccounts = [], activeToken = null;
 let _rid = 1;
@@ -1130,7 +1130,7 @@ function placeSide(sym, side) {
   if (balance===null) return;
   readSettings();
   const s = S[sym];
-  const list = side==='OVER4' ? s.over4List : s.under5List;
+  const list = lossList;
   const stake = +(calcStake(list).toFixed(2));
   if (stake>balance) { alert2('Insufficient balance for '+sym+' '+side+'. Bot paused.'); pauseBot(); return; }
   const contractType = side==='OVER4' ? 'DIGITOVER' : 'DIGITUNDER';
@@ -1148,10 +1148,20 @@ function placeSide(sym, side) {
 }
 
 function calcStake(list) {
-  if (!list.length) return initStake;
-  if (list.length === 1) return Math.max(initStake, parseFloat((list[0] * 2.1).toFixed(2)));
-  const window5 = list.slice(0, 5);
+  // list param kept for signature compatibility but always uses global lossList
+  const l = lossList;
+  if (!l.length) return initStake;
+  if (l.length === 1) return Math.max(initStake, parseFloat((l[0] * 2.1).toFixed(2)));
+  const window5 = l.slice(0, 5);
   return Math.max(initStake, parseFloat((window5.reduce((a,b)=>a+b,0)*mFactor).toFixed(2)));
+}
+
+// Remove all entries from lossList that are strictly less than the win stake
+function clearLossesBelow(winStake) {
+  const before = lossList.length;
+  lossList = lossList.filter(v => v >= winStake);
+  const removed = before - lossList.length;
+  if (removed > 0) addLog('🧹 Loss list: cleared '+removed+' entr'+(removed===1?'y':'ies')+' < '+winStake.toFixed(2)+'. Remaining: '+lossList.length,'info');
 }
 
 function wsSendBuy(sym, type, barrier, stake, rid) {
@@ -1172,12 +1182,12 @@ function predetermineResult(sym, side, won, digit) {
   s.symPL=parseFloat((s.symPL+profit).toFixed(2));
   updateBotDD();
   if (side==='OVER4') {
-    if (won){ s.over4W++; wins++; s.over4List.splice(0,5); addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'OVER','WIN',stake,stake+profit,profit,true); }
-    else    { s.over4L++; losses++; s.over4List.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
+    if (won){ s.over4W++; wins++; clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'OVER','WIN',stake,stake+profit,profit,true); }
+    else    { s.over4L++; losses++; lossList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
     g('over4p-'+sym).innerHTML=''; s.pendingOver4=null;
   } else {
-    if (won){ s.under5W++; wins++; s.under5List.splice(0,5); addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'UNDER','WIN',stake,stake+profit,profit,true); }
-    else    { s.under5L++; losses++; s.under5List.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
+    if (won){ s.under5W++; wins++; clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'UNDER','WIN',stake,stake+profit,profit,true); }
+    else    { s.under5L++; losses++; lossList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
     g('under5p-'+sym).innerHTML=''; s.pendingUnder5=null;
   }
   updateSymSides(sym); updateKPIs(); checkTPSL();
@@ -1239,11 +1249,11 @@ function reviseResult(sym, side, stake, won) {
   s.symPL=parseFloat((s.symPL-wrongProfit+correctProfit).toFixed(2));
   updateBotDD();
   if (side==='OVER4') {
-    if (won){ s.over4L--; losses--; s.over4W++; wins++; s.over4List.splice(0,5); }
-    else    { s.over4W--; wins--; s.over4L++; losses++; s.over4List.push(stake); }
+    if (won){ s.over4L--; losses--; s.over4W++; wins++; clearLossesBelow(stake); }
+    else    { s.over4W--; wins--; s.over4L++; losses++; lossList.push(stake); }
   } else {
-    if (won){ s.under5L--; losses--; s.under5W++; wins++; s.under5List.splice(0,5); }
-    else    { s.under5W--; wins--; s.under5L++; losses++; s.under5List.push(stake); }
+    if (won){ s.under5L--; losses--; s.under5W++; wins++; clearLossesBelow(stake); }
+    else    { s.under5W--; wins--; s.under5L++; losses++; lossList.push(stake); }
   }
   updateSymSides(sym); updateKPIs(); checkTPSL();
 }
@@ -1280,11 +1290,12 @@ function readSettings() {
 function doStart() {
   SYMBOLS.forEach(sym=>{
     const s=S[sym];
-    s.over4List=[]; s.under5List=[]; s.over4W=0; s.over4L=0; s.under5W=0; s.under5L=0;
+    s.over4W=0; s.over4L=0; s.under5W=0; s.under5L=0;
     s.pendingOver4=null; s.pendingUnder5=null; s.settledCids.clear();
     s.symPL=0;
     g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
   });
+  lossList=[];
   wins=0; losses=0; totalPL=0; maxDD=0; startBal=balance;
   readSettings(); hideAlert(); updateKPIs(); lockCfg(true);
   startSessionTimer();
@@ -1450,13 +1461,15 @@ function updateTape(sym, d) {
 
 function updateSymSides(sym){
   const s=S[sym];
-  g('over4s-'+sym).textContent=calcStake(s.over4List).toFixed(2);
-  g('under5s-'+sym).textContent=calcStake(s.under5List).toFixed(2);
+  const stake=calcStake(lossList).toFixed(2);
+  g('over4s-'+sym).textContent=stake;
+  g('under5s-'+sym).textContent=stake;
   g('over4w-'+sym).textContent=s.over4W; g('over4l-'+sym).textContent=s.over4L;
   g('under5w-'+sym).textContent=s.under5W; g('under5l-'+sym).textContent=s.under5L;
-  // chips
-  const oc=g('over4c-'+sym); oc.innerHTML=s.over4List.length?s.over4List.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
-  const ec=g('under5c-'+sym); ec.innerHTML=s.under5List.length?s.under5List.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
+  // chips — show global lossList (same for both sides)
+  const chipHtml=lossList.length?lossList.map(v=>'<span class="chip">'+v.toFixed(2)+'</span>').join(''):'<span class="chip-empty">empty</span>';
+  g('over4c-'+sym).innerHTML=chipHtml;
+  g('under5c-'+sym).innerHTML=chipHtml;
   // per-symbol P&L
   const plEl=g('spl-'+sym);
   plEl.textContent=(s.symPL>=0?'+':'')+s.symPL.toFixed(2);
