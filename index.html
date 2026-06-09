@@ -178,6 +178,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .hist-empty{text-align:center;padding:20px 0;color:var(--text3);font-size:11px;}
 /* Pending indicator */
 .pend-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--yellow);animation:pulse 1s infinite;margin-left:4px;vertical-align:middle;}
+.pend-count{display:inline-flex;align-items:center;gap:3px;margin-left:4px;padding:1px 6px;border-radius:4px;background:var(--yellow-bg);border:1px solid var(--yellow);color:var(--yellow);font-family:'DM Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.5px;animation:pulse 1.2s infinite;vertical-align:middle;}
 
 /* ── UI Improvement 1: Digit frequency bar overlay ── */
 .digit-bar-wrap{position:relative;display:inline-block;width:100%;}
@@ -475,9 +476,9 @@ function makeSymState(sym) {
     maxOverDigits:  [],
     maxUnderDigits: [],
     pipSize: 0,
-    // per-side martingale
-    pendingOver4: null,
-    pendingUnder5: null,
+    // per-side pending contracts (arrays to allow multiple simultaneous)
+    pendingOver4: [],
+    pendingUnder5: [],
     over4W: 0, over4L: 0, under5W: 0, under5L: 0,
     // per-symbol P&L
     symPL: 0,
@@ -1099,9 +1100,9 @@ function onTick(msg) {
   readSettings();
   recomputeThresholdDigits(sym);
 
-  // Predetermine pending results
-  if (s.pendingOver4  && !s.pendingOver4.settled)  predetermineResult(sym,'OVER4',  d>4,  d);
-  if (s.pendingUnder5 && !s.pendingUnder5.settled)  predetermineResult(sym,'UNDER5', d<5, d);
+  // Predetermine pending results for all open contracts on this tick
+  s.pendingOver4.filter(p=>!p.settled).forEach(()=>predetermineResult(sym,'OVER4',  d>4,  d));
+  s.pendingUnder5.filter(p=>!p.settled).forEach(()=>predetermineResult(sym,'UNDER5', d<5, d));
 
   const dOverStreakMet  = s.digitOverCount[d]  >= triggerThreshold;
   const dUnderStreakMet = s.digitUnderCount[d] >= triggerThreshold;
@@ -1130,17 +1131,17 @@ function placeSide(sym, side) {
   if (balance===null) return;
   readSettings();
   const s = S[sym];
-  const list = lossList;
-  const stake = +(calcStake(list).toFixed(2));
+  const stake = +(calcStake(lossList).toFixed(2));
   if (stake>balance) { alert2('Insufficient balance for '+sym+' '+side+'. Bot paused.'); pauseBot(); return; }
   const contractType = side==='OVER4' ? 'DIGITOVER' : 'DIGITUNDER';
   const barrier      = side==='OVER4' ? '4' : '5';
   const rid = nextRid();
   s.buyCbs[rid] = (cid) => {
     const pendObj = {cid, stake, settled:false};
-    if (side==='OVER4')  { s.pendingOver4=pendObj;  g('over4p-'+sym).innerHTML='<span class="pend-dot"></span>'; }
-    else               { s.pendingUnder5=pendObj; g('under5p-'+sym).innerHTML='<span class="pend-dot"></span>'; }
+    if (side==='OVER4')  s.pendingOver4.push(pendObj);
+    else                 s.pendingUnder5.push(pendObj);
     s.cidSide[cid]=side; s.cidStake[cid]=stake; s.cidPrediction[cid]=null;
+    updatePendingBadge(sym, side);
     addLog('['+sym+'] ✓ '+contractType+(side==='OVER4'?'4':'5')+' bought #'+cid+' stake='+stake.toFixed(2),'ok');
   };
   wsSendBuy(sym, contractType, barrier, stake, rid);
@@ -1172,25 +1173,44 @@ function wsSendBuy(sym, type, barrier, stake, rid) {
 // ── Predetermine ──────────────────────────────────────────────────────────────
 function predetermineResult(sym, side, won, digit) {
   const s = S[sym];
-  const pend = side==='OVER4' ? s.pendingOver4 : s.pendingUnder5;
-  if (!pend||pend.settled) return;
-  pend.settled=true;
-  if (pend.cid) s.cidPrediction[pend.cid]=won;
-  const stake=pend.stake;
-  const profit=won?parseFloat((stake*0.9).toFixed(2)):parseFloat((-stake).toFixed(2));
-  totalPL=parseFloat((totalPL+profit).toFixed(2));
-  s.symPL=parseFloat((s.symPL+profit).toFixed(2));
-  updateBotDD();
+  const arr = side==='OVER4' ? s.pendingOver4 : s.pendingUnder5;
+  // settle all unsettled contracts in this side's array
+  arr.forEach(pend => {
+    if (!pend || pend.settled) return;
+    pend.settled = true;
+    if (pend.cid) s.cidPrediction[pend.cid] = won;
+    const stake = pend.stake;
+    const profit = won ? parseFloat((stake*0.9).toFixed(2)) : parseFloat((-stake).toFixed(2));
+    totalPL = parseFloat((totalPL+profit).toFixed(2));
+    s.symPL  = parseFloat((s.symPL+profit).toFixed(2));
+    updateBotDD();
+    if (side==='OVER4') {
+      if (won){ s.over4W++; wins++;   clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok');  addHistory(sym,'OVER','WIN', stake,stake+profit,profit,true); }
+      else    { s.over4L++; losses++; lossList.push(stake);    addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
+    } else {
+      if (won){ s.under5W++; wins++;   clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok');  addHistory(sym,'UNDER','WIN', stake,stake+profit,profit,true); }
+      else    { s.under5L++; losses++; lossList.push(stake);    addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
+    }
+  });
+  // remove settled entries and update badge
   if (side==='OVER4') {
-    if (won){ s.over4W++; wins++; clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'OVER','WIN',stake,stake+profit,profit,true); }
-    else    { s.over4L++; losses++; lossList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITOVER4 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'OVER','LOSS',stake,0,profit,true); }
-    g('over4p-'+sym).innerHTML=''; s.pendingOver4=null;
+    s.pendingOver4 = s.pendingOver4.filter(p=>!p.settled);
+    updatePendingBadge(sym,'OVER4');
   } else {
-    if (won){ s.under5W++; wins++; clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITUNDER5 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok'); addHistory(sym,'UNDER','WIN',stake,stake+profit,profit,true); }
-    else    { s.under5L++; losses++; lossList.push(stake); addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
-    g('under5p-'+sym).innerHTML=''; s.pendingUnder5=null;
+    s.pendingUnder5 = s.pendingUnder5.filter(p=>!p.settled);
+    updatePendingBadge(sym,'UNDER5');
   }
   updateSymSides(sym); updateKPIs(); checkTPSL();
+}
+
+// Update the count badge next to each side title
+function updatePendingBadge(sym, side) {
+  const arr   = side==='OVER4' ? S[sym].pendingOver4 : S[sym].pendingUnder5;
+  const elId  = side==='OVER4' ? 'over4p-'+sym : 'under5p-'+sym;
+  const el    = g(elId); if (!el) return;
+  const count = arr.filter(p=>!p.settled).length;
+  if (count === 0) { el.innerHTML = ''; }
+  else { el.innerHTML = '<span class="pend-count">'+count+' open</span>'; }
 }
 
 // ── Official settlement ───────────────────────────────────────────────────────
@@ -1200,7 +1220,6 @@ function onTransaction(msg) {
   const action=tx.action_type||tx.action||'';
   if (action!=='sell') return;
   const cid=tx.contract_id; if(!cid) return;
-  // Find which symbol owns this cid
   for (const sym of SYMBOLS) {
     const s=S[sym];
     if (!s.cidSide[cid]) continue;
@@ -1215,6 +1234,10 @@ function onTransaction(msg) {
     }
     delete s.cidSide[cid]; delete s.cidStake[cid]; delete s.cidPrediction[cid];
     s.settledCids.add(cid);
+    // clean settled entry from pending array
+    s.pendingOver4  = s.pendingOver4.filter(p=>p.cid!==cid);
+    s.pendingUnder5 = s.pendingUnder5.filter(p=>p.cid!==cid);
+    updatePendingBadge(sym,'OVER4'); updatePendingBadge(sym,'UNDER5');
     return;
   }
 }
@@ -1237,6 +1260,10 @@ function onPOC(msg) {
     }
     delete s.cidSide[cid]; delete s.cidStake[cid]; delete s.cidPrediction[cid];
     s.settledCids.add(cid);
+    // clean settled entry from pending array
+    s.pendingOver4  = s.pendingOver4.filter(p=>p.cid!==cid);
+    s.pendingUnder5 = s.pendingUnder5.filter(p=>p.cid!==cid);
+    updatePendingBadge(sym,'OVER4'); updatePendingBadge(sym,'UNDER5');
     return;
   }
 }
@@ -1291,7 +1318,7 @@ function doStart() {
   SYMBOLS.forEach(sym=>{
     const s=S[sym];
     s.over4W=0; s.over4L=0; s.under5W=0; s.under5L=0;
-    s.pendingOver4=null; s.pendingUnder5=null; s.settledCids.clear();
+    s.pendingOver4=[]; s.pendingUnder5=[]; s.settledCids.clear();
     s.symPL=0;
     g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
   });
@@ -1328,7 +1355,7 @@ function doPause() {
 function pauseBot() {
   setStatus('paused'); addLog('Bot PAUSED.','warn');
   SYMBOLS.forEach(sym=>{
-    S[sym].pendingOver4=null; S[sym].pendingUnder5=null;
+    S[sym].pendingOver4=[]; S[sym].pendingUnder5=[];
     g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
     unsubscribeFromTicks(sym);
   });
@@ -1337,7 +1364,7 @@ function doStop() {
   if (reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;} reconnectAttempts=0;
   setStatus('stopped');
   SYMBOLS.forEach(sym=>{
-    S[sym].pendingOver4=null; S[sym].pendingUnder5=null;
+    S[sym].pendingOver4=[]; S[sym].pendingUnder5=[];
     g('over4p-'+sym).innerHTML=''; g('under5p-'+sym).innerHTML='';
     unsubscribeFromTicks(sym);
   });
