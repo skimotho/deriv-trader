@@ -497,6 +497,7 @@ function makeSymState(sym) {
     buyCbs: {},
     tickSubId: null,
     historySeeded: false,
+    lastTickEpoch: null,
   };
 }
 
@@ -1092,6 +1093,8 @@ function onTick(msg) {
   const s = S[sym];
   if (msg.subscription&&msg.subscription.id) s.tickSubId=msg.subscription.id;
   const q=tick.quote, epo=tick.epoch;
+  if (s.lastTickEpoch === epo) return;
+  s.lastTickEpoch = epo;
   const d=lastDigitOf(q,s.pipSize);
   g('tv-'+sym).textContent  = q;
   g('td-'+sym).textContent  = 'last digit: '+d;
@@ -1126,12 +1129,16 @@ function onTick(msg) {
 
   // ── One contract per symbol per side per tick — stake computed fresh now ──
   if (triggerUnder) {
-    addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info');
-    placeSide(sym,'UNDER5');
+    if (s.pendingUnder5.length === 0) {
+      addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info');
+      placeSide(sym,'UNDER5');
+    }
   }
   if (triggerOver) {
-    addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxUnderDigits.length+'/'+digitCounterFilter,'info');
-    placeSide(sym,'OVER4');
+    if (s.pendingOver4.length === 0) {
+      addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info');
+      placeSide(sym,'OVER4');
+    }
   }
 
   updateTriggerInfo(sym,d,triggerOver,triggerUnder);
