@@ -285,6 +285,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 /* ── Session timer in KPI ── */
 .kpi-timer{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--text);}
+
+/* ── Copy button ── */
+.btn-copy{background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:10px;color:var(--text3);padding:2px 8px;letter-spacing:.5px;transition:all var(--transition);font-family:'DM Mono',monospace;}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent);}
+.btn-copy.copied{border-color:var(--green);color:var(--green);}
 </style>
 </head>
 <body>
@@ -406,7 +411,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="global-log-panel">
       <div class="log-hd">
         <span class="log-title">Combined Trade History</span>
-        <button class="log-clear" onclick="clearTradeHistory()">Clear</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn-copy" id="copyHistBtn" onclick="copyTradeHistory()">Copy CSV</button>
+          <button class="log-clear" onclick="clearTradeHistory()">Clear</button>
+        </div>
       </div>
       <div id="combinedTradeHistory" style="flex:1;overflow-y:auto;padding:10px 12px;">
         <table class="hist-table" style="width:100%;font-size:11px;">
@@ -430,6 +438,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="log-hd">
         <span class="log-title">Activity Log</span>
         <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-copy" id="copyLogBtn" onclick="copyActivityLog()">Copy</button>
           <button class="log-clear" onclick="clearLog()">Clear</button>
         </div>
       </div>
@@ -1095,22 +1104,35 @@ function onTick(msg) {
   feedDigit(sym,d);
   renderSeedUI(sym); renderDigitTable(sym);
 
+  // ── Mark-to-market drawdown: update on every tick using unrealized P&L ──
+  updateMTMDrawdown();
+
   if (botState!=='running') return;
 
   readSettings();
   recomputeThresholdDigits(sym);
 
   // Predetermine pending results for all open contracts on this tick
-  s.pendingOver4.filter(p=>!p.settled).forEach(()=>predetermineResult(sym,'OVER4',  d>4,  d));
-  s.pendingUnder5.filter(p=>!p.settled).forEach(()=>predetermineResult(sym,'UNDER5', d<5, d));
+  // Use snapshot to avoid mutation during iteration
+  const pendOver4Snap  = s.pendingOver4.filter(p=>!p.settled);
+  const pendUnder5Snap = s.pendingUnder5.filter(p=>!p.settled);
+  if (pendOver4Snap.length)  predetermineResults(sym,'OVER4',  d>4, d, pendOver4Snap);
+  if (pendUnder5Snap.length) predetermineResults(sym,'UNDER5', d<5, d, pendUnder5Snap);
 
   const dOverStreakMet  = s.digitOverCount[d]  >= triggerThreshold;
   const dUnderStreakMet = s.digitUnderCount[d] >= triggerThreshold;
   const triggerUnder = dOverStreakMet  && s.maxOverDigits.length  >= digitCounterFilter;
   const triggerOver  = dUnderStreakMet && s.maxUnderDigits.length >= digitCounterFilter;
 
-  if (triggerUnder) { addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'UNDER5'); }
-  if (triggerOver)  { addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxUnderDigits.length+'/'+digitCounterFilter,'info'); placeSide(sym,'OVER4');  }
+  // ── One contract per symbol per side per tick — stake computed fresh now ──
+  if (triggerUnder) {
+    addLog('['+sym+'] Digit '+d+' → DIGITUNDER5 | over-streak='+s.digitOverCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxOverDigits.length+'/'+digitCounterFilter,'info');
+    placeSide(sym,'UNDER5');
+  }
+  if (triggerOver) {
+    addLog('['+sym+'] Digit '+d+' → DIGITOVER4  | under-streak='+s.digitUnderCount[d]+' threshold='+triggerThreshold+' qdigits='+s.maxUnderDigits.length+'/'+digitCounterFilter,'info');
+    placeSide(sym,'OVER4');
+  }
 
   updateTriggerInfo(sym,d,triggerOver,triggerUnder);
 }
@@ -1131,6 +1153,7 @@ function placeSide(sym, side) {
   if (balance===null) return;
   readSettings();
   const s = S[sym];
+  // ── Stake computed fresh on this tick, immediately before placing ──
   const stake = +(calcStake(lossList).toFixed(2));
   if (stake>balance) { alert2('Insufficient balance for '+sym+' '+side+'. Bot paused.'); pauseBot(); return; }
   const contractType = side==='OVER4' ? 'DIGITOVER' : 'DIGITUNDER';
@@ -1170,12 +1193,29 @@ function wsSendBuy(sym, type, barrier, stake, rid) {
   ws.send(JSON.stringify({buy:'1',price:Math.ceil(stake*3),subscribe:1,parameters:{contract_type:type,barrier:barrier,currency,underlying_symbol:sym,duration:1,duration_unit:'t',basis:'stake',amount:stake},req_id:rid}));
 }
 
+// ── Mark-to-market drawdown: unrealized P&L of all open contracts ─────────────
+function updateMTMDrawdown() {
+  // Compute unrealized P&L assuming all currently open contracts lose
+  // (worst-case mark-to-market). Update maxDD if this exceeds it.
+  let unrealized = 0;
+  SYMBOLS.forEach(sym => {
+    const s = S[sym];
+    s.pendingOver4.forEach(p => { if (!p.settled) unrealized -= p.stake; });
+    s.pendingUnder5.forEach(p => { if (!p.settled) unrealized -= p.stake; });
+  });
+  const mtmPL = totalPL + unrealized;
+  if (mtmPL < 0) {
+    const dd = Math.abs(mtmPL);
+    if (dd > maxDD) { maxDD = dd; updateKPIs(); }
+  }
+}
+
 // ── Predetermine ──────────────────────────────────────────────────────────────
-function predetermineResult(sym, side, won, digit) {
+// Settles a snapshot of pending contracts for a given sym+side on the current tick.
+function predetermineResults(sym, side, won, digit, snap) {
   const s = S[sym];
   const arr = side==='OVER4' ? s.pendingOver4 : s.pendingUnder5;
-  // settle all unsettled contracts in this side's array
-  arr.forEach(pend => {
+  snap.forEach(pend => {
     if (!pend || pend.settled) return;
     pend.settled = true;
     if (pend.cid) s.cidPrediction[pend.cid] = won;
@@ -1183,6 +1223,7 @@ function predetermineResult(sym, side, won, digit) {
     const profit = won ? parseFloat((stake*0.9).toFixed(2)) : parseFloat((-stake).toFixed(2));
     totalPL = parseFloat((totalPL+profit).toFixed(2));
     s.symPL  = parseFloat((s.symPL+profit).toFixed(2));
+    // Settled drawdown — also update after settlement
     updateBotDD();
     if (side==='OVER4') {
       if (won){ s.over4W++; wins++;   clearLossesBelow(stake); addLog('[PRE]['+sym+'] ✓ DIGITOVER4 WIN  (digit='+digit+') profit=+'+profit.toFixed(2),'ok');  addHistory(sym,'OVER','WIN', stake,stake+profit,profit,true); }
@@ -1192,7 +1233,7 @@ function predetermineResult(sym, side, won, digit) {
       else    { s.under5L++; losses++; lossList.push(stake);    addLog('[PRE]['+sym+'] ✗ DIGITUNDER5 LOSS (digit='+digit+') net='+profit.toFixed(2),'err'); addHistory(sym,'UNDER','LOSS',stake,0,profit,true); }
     }
   });
-  // remove settled entries and update badge
+  // Remove settled entries and update badge
   if (side==='OVER4') {
     s.pendingOver4 = s.pendingOver4.filter(p=>!p.settled);
     updatePendingBadge(sym,'OVER4');
@@ -1537,6 +1578,48 @@ function addHistory(sym,side,result,stake,payout,profit,predicted){
   showToast(sym, side, result, stake, profit);
   if(result==='WIN') playTone(880, 0.15);
   else               playTone(220, 0.2, 'sawtooth');
+}
+
+// ── Copy Trade History (CSV) ──────────────────────────────────────────────────
+function copyTradeHistory() {
+  const tbody = g('combinedHistoryBody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.rows);
+  if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) {
+    return;
+  }
+  const header = 'Time,Symbol,Type,Stake,Status';
+  const lines = rows.map(row => {
+    return Array.from(row.cells).map(cell => {
+      const text = cell.textContent.trim().replace(/,/g, ';');
+      return text;
+    }).join(',');
+  });
+  const csv = [header, ...lines].join('\n');
+  navigator.clipboard.writeText(csv).then(() => {
+    const btn = g('copyHistBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy CSV'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {});
+}
+
+// ── Copy Activity Log (Tab-separated) ────────────────────────────────────────
+function copyActivityLog() {
+  const box = g('globalLog');
+  if (!box) return;
+  const lines = Array.from(box.querySelectorAll('.ll')).map(line => {
+    const time = line.querySelector('.lt') ? line.querySelector('.lt').textContent.trim() : '';
+    const msg  = line.querySelector('.lm') ? line.querySelector('.lm').textContent.trim() : '';
+    return time + '\t' + msg;
+  });
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = g('copyLogBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {});
 }
 
 // ── OAuth init ────────────────────────────────────────────────────────────────
