@@ -954,8 +954,8 @@ function wsSend(obj) {
 
 // ── Seed history ───────────────────────────────────────────────────────────────
 function seedFromHistory(sym) {
-  addLog('Requesting last '+HISTORY_SIZE+' ticks for '+sym+'…','info');
-  wsSend({ticks_history:sym,count:HISTORY_SIZE,end:'latest',style:'ticks'});
+  addLog('Requesting last '+HISTORY_SIZE+' ticks for '+sym+' (with live subscription)…','info');
+  wsSend({ticks_history:sym,count:HISTORY_SIZE,end:'latest',style:'ticks',subscribe:1});
 }
 function subscribeToTicks(sym) {
   const s = S[sym];
